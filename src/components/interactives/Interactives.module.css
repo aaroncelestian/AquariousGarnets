@@ -1,0 +1,207 @@
+.figure {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+.chart {
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  display: block;
+  overflow: visible;
+  color: var(--color-text);
+}
+
+.label {
+  fill: var(--color-text);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.labelHi {
+  fill: var(--color-accent-700);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.axis {
+  stroke: var(--color-divider);
+  stroke-width: 1;
+  fill: none;
+}
+
+.pulse {
+  animation: pulse 2.2s ease-out infinite;
+  transform-origin: 230px 116px;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.9; transform: scale(0.4); }
+  80% { opacity: 0; transform: scale(2.4); }
+  100% { opacity: 0; transform: scale(2.4); }
+}
+
+.drawPath {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 1.6s ease forwards 0.15s;
+}
+
+@keyframes draw {
+  to { stroke-dashoffset: 0; }
+}
+
+.pinIn {
+  opacity: 0;
+  animation: pinIn 0.4s ease forwards 1.5s;
+}
+
+@keyframes pinIn {
+  to { opacity: 1; }
+}
+
+.xrf {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 12px;
+}
+
+.toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.barCoated {
+  fill: var(--color-accent);
+  transition: height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+    y 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.3s ease;
+}
+
+.barUncoated {
+  fill: #3b6fa0;
+  transition: height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+    y 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.3s ease;
+}
+
+.qual {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.qualRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+
+.qualLabel {
+  font-family: var(--font-heading);
+  font-weight: 600;
+}
+
+.qualVals {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.libs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: center;
+}
+
+.layer {
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.libsControls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.stepLabel {
+  font-size: 13px;
+  opacity: 0.65;
+  font-feature-settings: "tnum" 1;
+  min-width: 80px;
+  text-align: center;
+}
+
+.crystal {
+  width: 100%;
+  height: 100%;
+  min-height: 280px;
+  background:
+    radial-gradient(
+      ellipse at 40% 30%,
+      color-mix(in srgb, var(--color-accent) 8%, transparent),
+      transparent 55%
+    ),
+    var(--color-surface);
+  border: 1px solid var(--color-divider);
+  position: relative;
+}
+
+.crystalCaption {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  right: 12px;
+  font-size: 11px;
+  color: color-mix(in srgb, var(--color-text) 55%, transparent);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.legend {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  pointer-events: none;
+}
+
+.legendRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.swatch {
+  width: 10px;
+  height: 10px;
+  display: inline-block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse,
+  .drawPath,
+  .pinIn {
+    animation: none !important;
+  }
+  .drawPath { stroke-dashoffset: 0; }
+  .pinIn { opacity: 1; }
+  .layer { transition: none; }
+  .barCoated,
+  .barUncoated { transition: none; }
+}

@@ -1,0 +1,137 @@
+.shell {
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  background: var(--color-bg);
+}
+
+.slide {
+  min-height: 100vh;
+  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.slideInner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: var(--pad-y) var(--pad-x);
+  position: relative;
+  z-index: 1;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.slide.bleed .slideInner,
+.slide.cover .slideInner {
+  max-width: none;
+}
+
+.nav {
+  position: fixed;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  opacity: 0.4;
+  transition: opacity 150ms ease;
+}
+
+.nav:hover,
+.nav:focus-within {
+  opacity: 1;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--color-text);
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 0;
+}
+
+.dot[data-active="true"] {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.toc {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  opacity: 0.45;
+  transition: opacity 150ms ease;
+}
+
+.toc:hover,
+.toc:focus-within {
+  opacity: 1;
+}
+
+.tocBtn {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: none;
+  background: color-mix(in srgb, var(--color-bg) 85%, transparent);
+  color: var(--color-text);
+  padding: 6px 10px;
+  cursor: pointer;
+  text-align: left;
+  border-left: 2px solid transparent;
+}
+
+.tocBtn[data-active="true"] {
+  border-left-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.counter {
+  position: fixed;
+  bottom: 16px;
+  right: 20px;
+  z-index: 50;
+  font-size: 12px;
+  font-feature-settings: "tnum" 1;
+  color: color-mix(in srgb, var(--color-text) 55%, transparent);
+  background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+  padding: 6px 10px;
+  border: 1px solid var(--color-divider);
+  opacity: 0.5;
+}
+
+.counter:hover { opacity: 1; }
+
+@media (max-width: 700px) {
+  .nav { display: none; }
+  .toc {
+    flex-direction: row;
+    flex-wrap: wrap;
+    max-width: calc(100vw - 100px);
+    left: 12px;
+    bottom: 12px;
+  }
+  .tocBtn { font-size: 10px; padding: 4px 6px; }
+}
