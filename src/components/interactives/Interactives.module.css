@@ -4,6 +4,199 @@
   margin: 0;
 }
 
+.slideshow {
+  position: absolute;
+  inset: 0;
+  background: #0c0b0a;
+}
+
+.slideshowImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  opacity: 0;
+  transition: opacity 0.7s ease;
+  pointer-events: none;
+}
+
+.slideshowImg[data-active='true'] {
+  opacity: 1;
+}
+
+.slideshowDots {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  gap: 8px;
+  padding: 6px 10px;
+  background: color-mix(in srgb, var(--color-bg) 55%, transparent);
+}
+
+.slideshowDot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--color-text) 55%, transparent);
+  background: transparent;
+  cursor: pointer;
+}
+
+.slideshowDot[data-active='true'] {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.slideshowCount {
+  position: absolute;
+  right: 16px;
+  bottom: 18px;
+  z-index: 3;
+  font-size: 12px;
+  font-feature-settings: "tnum" 1;
+  color: color-mix(in srgb, var(--color-text) 70%, transparent);
+  background: color-mix(in srgb, var(--color-bg) 60%, transparent);
+  padding: 4px 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slideshowImg {
+    transition: none;
+  }
+}
+
+.locality {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  padding-left: 4px;
+}
+
+.mapFrame {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: min(42vh, 360px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--color-divider);
+  background: #1a1816;
+}
+
+.mapStage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  aspect-ratio: 2048 / 1535;
+  margin: 0 auto;
+}
+
+.mapStage img {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  display: block;
+  filter: contrast(1.04) saturate(0.95);
+}
+
+.mapAnnot {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.mapPinPulse {
+  transform-origin: center;
+  animation: mapPulseSvg 2.2s ease-out infinite;
+}
+
+@keyframes mapPulseSvg {
+  0% { opacity: 1; }
+  50% { opacity: 0.55; }
+  100% { opacity: 1; }
+}
+
+.approachIdle {
+  opacity: 0.85;
+}
+
+.approachWalk {
+  animation: approachMarch 1.1s linear infinite;
+}
+
+@keyframes approachMarch {
+  to {
+    stroke-dashoffset: -8.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .approachWalk {
+    animation: none;
+  }
+}
+
+.mapTagPark,
+.mapTagGarnet {
+  position: absolute;
+  z-index: 2;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  pointer-events: none;
+  padding: 3px 8px;
+}
+
+.mapTagPark {
+  left: 59%;
+  top: 87%;
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+  border: 1px solid var(--color-accent);
+  transform: translate(14px, -45%);
+}
+
+.mapTagGarnet {
+  left: 35%;
+  top: 71%;
+  color: var(--color-bg);
+  background: var(--color-accent);
+  transform: translate(-50%, -230%);
+}
+
+.mapCaption {
+  position: absolute;
+  left: 10px;
+  bottom: 8px;
+  z-index: 2;
+  font-size: 12px;
+  font-weight: 600;
+  color: #f3f2f2;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+.elevChart {
+  width: 100%;
+  height: auto;
+  max-height: 240px;
+  display: block;
+  color: var(--color-text);
+  flex: 0 0 auto;
+}
+
 .chart {
   width: 100%;
   height: auto;
@@ -17,14 +210,14 @@
   fill: var(--color-text);
   font-family: var(--font-heading);
   font-weight: 600;
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .labelHi {
   fill: var(--color-accent-700);
   font-family: var(--font-heading);
   font-weight: 600;
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .axis {
@@ -102,7 +295,7 @@
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .qualLabel {
@@ -124,6 +317,229 @@
   justify-content: center;
 }
 
+.libsScene {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  gap: 8px;
+}
+
+.libsViewport {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+}
+
+.libsZoomSvg {
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  display: block;
+  overflow: hidden;
+  color: var(--color-text);
+}
+
+.libsCamera {
+  transition: transform 0.95s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.libsFarCrystal {
+  transition: opacity 0.6s ease;
+}
+
+.libsStack {
+  transition: opacity 0.55s ease 0.15s;
+}
+
+.libsLayer {
+  transition: transform 0.75s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.libsBeam line {
+  transition: opacity 0.35s ease, stroke-width 0.35s ease;
+}
+
+.libsBeam[data-idle] line:first-child {
+  animation: libsBeamPulse 2.2s ease-in-out infinite;
+}
+
+.libsBeam[data-fired='true'] line:first-child {
+  opacity: 0.95;
+  stroke-width: 3.5;
+  animation: none;
+}
+
+.libsPlasma {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.libsPlasma[data-fired='true'] {
+  animation: libsPlasmaPop 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.libsPlasma[data-fired='settled'] {
+  opacity: 0.45;
+}
+
+.libsEjecta {
+  opacity: 0;
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+}
+
+.libsPlasma[data-fired='true'] .libsEjecta {
+  animation: libsEjecta 0.7s ease-out forwards;
+}
+
+.libsElements {
+  pointer-events: none;
+}
+
+.libsElement {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.libsElements[data-fired='true'] .libsElement {
+  animation: libsElementOut 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation-delay: calc(var(--i, 0) * 35ms);
+}
+
+@keyframes libsBeamPulse {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@keyframes libsPlasmaPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  25% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+}
+
+@keyframes libsEjecta {
+  0% {
+    opacity: 0;
+    stroke-dashoffset: 40;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes libsElementOut {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  35% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 0.92;
+    transform: scale(1);
+  }
+}
+
+.ramanMaturity {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 10px;
+  min-height: 0;
+}
+
+.ramanSliderWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 4px;
+}
+
+.ramanSliderLabel {
+  font-size: 13px;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  opacity: 0.7;
+}
+
+.ramanSlider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--color-accent) 35%, var(--color-divider));
+  outline: none;
+  cursor: pointer;
+}
+
+.ramanSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  border: 2px solid var(--color-bg);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 50%, transparent);
+  cursor: grab;
+}
+
+.ramanSlider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  border: 2px solid var(--color-bg);
+  cursor: grab;
+}
+
+.ramanTicks {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ramanTick {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 12px;
+  color: color-mix(in srgb, var(--color-text) 45%, transparent);
+  cursor: pointer;
+}
+
+.ramanTick[data-active='true'] {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
 .layer {
   transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -136,7 +552,7 @@
 }
 
 .stepLabel {
-  font-size: 13px;
+  font-size: 15px;
   opacity: 0.65;
   font-feature-settings: "tnum" 1;
   min-width: 80px;
@@ -158,12 +574,42 @@
   position: relative;
 }
 
+.crystal[data-backdrop] {
+  min-height: 0;
+  border: none;
+  background:
+    radial-gradient(
+      ellipse 55% 50% at 68% 48%,
+      color-mix(in srgb, var(--color-accent) 7%, transparent),
+      transparent 70%
+    ),
+    var(--color-bg);
+}
+
+.crystal[data-backdrop] .legend {
+  top: auto;
+  bottom: 48px;
+  right: var(--pad-x);
+  padding: 8px 10px;
+  background: color-mix(in srgb, var(--color-bg) 72%, transparent);
+}
+
+.crystal[data-backdrop] .crystalCaption {
+  left: auto;
+  right: var(--pad-x);
+  bottom: 14px;
+  text-align: right;
+  max-width: 42ch;
+  padding: 4px 8px;
+  background: color-mix(in srgb, var(--color-bg) 72%, transparent);
+}
+
 .crystalCaption {
   position: absolute;
   left: 12px;
   bottom: 10px;
   right: 12px;
-  font-size: 11px;
+  font-size: 13px;
   color: color-mix(in srgb, var(--color-text) 55%, transparent);
   pointer-events: none;
   z-index: 2;
@@ -177,7 +623,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 11px;
+  font-size: 13px;
   pointer-events: none;
 }
 
@@ -193,6 +639,258 @@
   display: inline-block;
 }
 
+.raman {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 10px;
+  min-height: 0;
+}
+
+.ramanCaption {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--color-text) 72%, transparent);
+  min-height: 2.7em;
+}
+
+.ramanBond {
+  fill: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  stroke: var(--color-neutral-700);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  transition: fill 0.35s var(--ease-out);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+[data-vib='g'] .ramanBond,
+[data-vib='both'] .ramanBond {
+  fill: color-mix(in srgb, var(--color-accent) 18%, transparent);
+}
+
+[data-vib='d'] .ramanBond {
+  fill: color-mix(in srgb, var(--color-accent) 22%, transparent);
+}
+
+[data-vib='g'] .ramanBond {
+  animation: ramanBondG 0.7s ease-in-out infinite;
+}
+
+[data-vib='d'] .ramanBond {
+  animation: ramanBondD 0.7s ease-in-out infinite;
+}
+
+[data-vib='both'] .ramanBond {
+  animation: ramanBondBoth 1.05s ease-in-out infinite;
+}
+
+@keyframes ramanBondG {
+  0%,
+  100% {
+    transform: scaleX(1) scaleY(1);
+  }
+  50% {
+    transform: scaleX(1.1) scaleY(0.9);
+  }
+}
+
+@keyframes ramanBondD {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.14);
+  }
+}
+
+@keyframes ramanBondBoth {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scaleX(1.1) scaleY(0.9);
+  }
+  70% {
+    transform: scale(1.12);
+  }
+}
+
+.ramanCarbon {
+  fill: var(--color-neutral-800);
+  stroke: var(--color-bg);
+  stroke-width: 1.5;
+}
+
+.ramanCLabel {
+  fill: #f3f2f2;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 9px;
+  pointer-events: none;
+}
+
+.ramanAtom {
+  transform: translate(0, 0);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+[data-vib='g'] .ramanAtom {
+  animation: ramanG 0.7s ease-in-out infinite;
+}
+
+[data-vib='d'] .ramanAtom {
+  animation: ramanD 0.7s ease-in-out infinite;
+}
+
+[data-vib='both'] .ramanAtom {
+  animation: ramanBoth 1.05s ease-in-out infinite;
+}
+
+@keyframes ramanG {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(var(--gx), var(--gy));
+  }
+}
+
+@keyframes ramanD {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(var(--ox), var(--oy));
+  }
+}
+
+@keyframes ramanBoth {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  35% {
+    transform: translate(var(--gx), var(--gy));
+  }
+  70% {
+    transform: translate(var(--ox), var(--oy));
+  }
+}
+
+.ramanArrow {
+  stroke: var(--color-accent);
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  fill: none;
+  opacity: 0.85;
+}
+
+.ramanStretchCue {
+  animation: ramanCuePulse 0.7s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.ramanBreathCue {
+  animation: ramanCuePulse 0.7s ease-in-out infinite;
+}
+
+@keyframes ramanCuePulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.ramanSpectrum {
+  stroke: var(--color-text);
+  stroke-width: 2.25;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  transition: d 0.4s var(--ease-out);
+}
+
+.ramanZoom {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  z-index: 1;
+}
+
+.ramanZoomViewport {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: clamp(56px, 9vh, 96px) clamp(20px, 3.5vw, 48px)
+    clamp(108px, 16vh, 168px);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ramanZoomImg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  pointer-events: none;
+  user-select: none;
+  will-change: transform;
+}
+
+.ramanZoomChrome {
+  position: absolute;
+  right: clamp(16px, 3vw, 40px);
+  bottom: clamp(88px, 13vh, 140px);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.ramanZoomStep {
+  font-size: 12px;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-text) 70%, transparent);
+  background: color-mix(in srgb, var(--color-bg) 72%, transparent);
+  padding: 4px 8px;
+}
+
+.ramanZoomCta {
+  font-size: 13px;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-bg) 78%, transparent);
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--color-text) 18%, transparent);
+}
+
+.ramanZoomCaption {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .pulse,
   .drawPath,
@@ -202,6 +900,24 @@
   .drawPath { stroke-dashoffset: 0; }
   .pinIn { opacity: 1; }
   .layer { transition: none; }
+  .libsCamera,
+  .libsLayer,
+  .libsFarCrystal,
+  .libsStack {
+    transition: none !important;
+  }
+  .libsBeam[data-idle] line:first-child,
+  .libsPlasma[data-fired='true'],
+  .libsPlasma[data-fired='true'] .libsEjecta,
+  .libsElements[data-fired='true'] .libsElement {
+    animation: none !important;
+  }
   .barCoated,
   .barUncoated { transition: none; }
+  .ramanAtom,
+  .ramanBond,
+  .ramanStretchCue,
+  .ramanBreathCue {
+    animation: none !important;
+  }
 }

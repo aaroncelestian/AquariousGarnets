@@ -1,13 +1,16 @@
 import { lazy, Suspense } from 'react'
 import { motion } from 'framer-motion'
 import type { Slide } from '../../data/slides'
-import { CHAPTERS, slides } from '../../data/slides'
 import { usePrefersReducedMotion } from '../../hooks/useActiveSlide'
-import { useSlideNav } from '../../hooks/useSlideNav'
 import { LocalityMap } from '../interactives/LocalityMap'
 import { XrfChart } from '../interactives/XrfChart'
+import { LibsBlast } from '../interactives/LibsBlast'
 import { LibsPeel } from '../interactives/LibsPeel'
 import { CnRatio } from '../interactives/CnRatio'
+import { RamanMaturity } from '../interactives/RamanMaturity'
+import { RamanBands } from '../interactives/RamanBands'
+import { RamanZoom } from '../interactives/RamanZoom'
+import { ImageSlideshow } from '../interactives/ImageSlideshow'
 import styles from './Layouts.module.css'
 
 const CrystalViewer = lazy(() =>
@@ -53,23 +56,42 @@ function Kicker({ text }: { text?: string }) {
 function Interactive({
   kind,
   active,
+  backdrop = false,
 }: {
   kind: NonNullable<Slide['interactive']>
   active: boolean
+  backdrop?: boolean
 }) {
   switch (kind) {
     case 'locality-map':
       return <LocalityMap active={active} />
     case 'xrf-chart':
       return <XrfChart active={active} />
+    case 'libs-blast':
+      return <LibsBlast active={active} />
     case 'libs-peel':
       return <LibsPeel active={active} />
     case 'cn-ratio':
       return <CnRatio active={active} />
+    case 'raman-maturity':
+      return <RamanMaturity active={active} />
+    case 'raman-bands':
+      return <RamanBands active={active} />
+    case 'raman-zoom':
+      return <RamanZoom active={active} />
     case 'crystal-viewer':
       return (
-        <Suspense fallback={<div style={{ height: '100%', background: 'var(--color-surface)' }} />}>
-          <CrystalViewer active={active} />
+        <Suspense
+          fallback={
+            <div
+              style={{
+                height: '100%',
+                background: backdrop ? 'transparent' : 'var(--color-surface)',
+              }}
+            />
+          }
+        >
+          <CrystalViewer active={active} backdrop={backdrop} />
         </Suspense>
       )
   }
@@ -82,19 +104,20 @@ export function SlideView({
   slide: Slide
   active: boolean
 }) {
-  const goTo = useSlideNav()
-
   if (slide.layout === 'cover') {
     return (
-      <div className={styles.cover}>
+      <div className={styles.cover} data-active={active || undefined}>
         {slide.image && (
           <div className={styles.bg} aria-hidden>
-            <img src={slide.image.src} alt="" />
+            <img src={slide.image.src} alt="" className={styles.bgBase} />
+            <img src={slide.image.src} alt="" className={styles.bgLuster} />
+            <div className={styles.bgSheen} />
+            <div className={styles.bgGhost} />
             <div className={styles.scrim} />
           </div>
         )}
         <Rise active={active} className={styles.content}>
-          <div className={styles.brand}>{slide.kicker}</div>
+          {slide.kicker && <div className={styles.brand}>{slide.kicker}</div>}
           <h1 className={styles.display}>{slide.displayTitle}</h1>
           {slide.subtitle && (
             <p className={`${styles.sub} text-muted`}>{slide.subtitle}</p>
@@ -119,20 +142,61 @@ export function SlideView({
   }
 
   if (slide.layout === 'bleed') {
+    const fit = slide.image?.fit ?? 'cover'
     return (
       <>
-        <div className={styles.bleed}>
-          {slide.image && <img src={slide.image.src} alt={slide.image.alt} />}
+        <div className={styles.bleed} data-fit={fit}>
+          {slide.interactive ? (
+            <Interactive kind={slide.interactive} active={active} />
+          ) : slide.slideshow ? (
+            <ImageSlideshow images={slide.slideshow} active={active} />
+          ) : (
+            slide.image && <img src={slide.image.src} alt={slide.image.alt} />
+          )}
           <div className={styles.bleedScrim} />
         </div>
         {slide.kicker && (
           <div className={`${styles.bleedKicker} kicker`}>{slide.kicker}</div>
         )}
-        <Rise active={active} className={styles.bleedCopy}>
-          <h2>{slide.title}</h2>
-          {slide.body && <p className={styles.body}>{slide.body}</p>}
-        </Rise>
+        {(slide.title || slide.body) && (
+          <Rise active={active} className={styles.bleedCopy}>
+            {slide.title && <h2>{slide.title}</h2>}
+            {slide.body && <p className={`${styles.body} text-muted`}>{slide.body}</p>}
+          </Rise>
+        )}
       </>
+    )
+  }
+
+  if (slide.layout === 'stage') {
+    return (
+      <div className={styles.stage}>
+        {slide.interactive && (
+          <div className={styles.stageBg}>
+            <Interactive kind={slide.interactive} active={active} backdrop />
+          </div>
+        )}
+        <div className={styles.stageScrim} aria-hidden />
+        <Rise active={active} className={styles.stageCopy}>
+          <Kicker text={slide.kicker} />
+          {slide.title && <h2>{slide.title}</h2>}
+          {slide.body && <p className={`${styles.body} text-muted`}>{slide.body}</p>}
+          {slide.cols && (
+            <div className={styles.stageCols}>
+              {slide.cols.map((c) => (
+                <div
+                  key={c.heading}
+                  className={styles.stageCol}
+                  data-accent={c.heading === 'Almandine' || undefined}
+                >
+                  <h3>{c.heading}</h3>
+                  <p>{c.body}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </Rise>
+      </div>
     )
   }
 
@@ -178,7 +242,7 @@ export function SlideView({
   if (slide.layout === 'cols') {
     return (
       <div className={styles.cols}>
-        <Rise active={active}>
+        <Rise active={active} className={styles.contentFill}>
           <Kicker text={slide.kicker} />
           <h2>{slide.title}</h2>
           <div className={styles.colGrid}>
@@ -217,40 +281,64 @@ export function SlideView({
   }
 
   // content (default)
-  const isContents = slide.id === 'contents'
-
   return (
     <div className={styles.contentSlide}>
-      <Rise active={active}>
+      <Rise active={active} className={styles.contentFill}>
         <Kicker text={slide.kicker} />
         <h2>{slide.title}</h2>
         {slide.body && <p className={`${styles.body} text-muted`}>{slide.body}</p>}
-        {isContents ? (
-          <div className={styles.tocList}>
-            {CHAPTERS.map((ch) => {
-              const target = slides.findIndex(
-                (s) => s.chapter === ch.id && s.layout === 'divider',
-              )
-              return (
-                <button
-                  key={ch.id}
-                  type="button"
-                  className={styles.tocRow}
-                  onClick={() => goTo(Math.max(0, target))}
-                >
-                  <span className={styles.tocNum}>{ch.num}</span>
-                  <span>{ch.title}</span>
-                </button>
-              )
-            })}
+        {slide.figures && (
+          <div className={styles.figures}>
+            {slide.figures.map((fig) => (
+              <figure key={fig.src} className={styles.figureCard}>
+                <img src={fig.src} alt={fig.alt} />
+                {fig.caption && <figcaption>{fig.caption}</figcaption>}
+              </figure>
+            ))}
           </div>
-        ) : slide.bullets ? (
+        )}
+        {slide.bullets ? (
           <ul className={styles.bullets}>
             {slide.bullets.map((b) => (
               <li key={b}>{b}</li>
             ))}
           </ul>
         ) : null}
+        {slide.timeline && (
+          <ol className={styles.timeline}>
+            {slide.timeline.map((item) => (
+              <li key={`${item.year}-${item.text}`}>
+                <span className={styles.timelineYear}>{item.year}</span>
+                <span className={styles.timelineText}>{item.text}</span>
+              </li>
+            ))}
+          </ol>
+        )}
+        {slide.tree && (
+          <div className={styles.tree} aria-label="Career path">
+            {slide.tree.map((level, li) => (
+              <div
+                key={li}
+                className={styles.treeLevel}
+                data-root={li === slide.tree!.length - 1 ? 'true' : undefined}
+                data-count={level.length}
+              >
+                {level.length > 1 && <div className={styles.treeBranch} aria-hidden />}
+                <div className={styles.treeNodes}>
+                  {level.map((node) => (
+                    <div
+                      key={`${node.year}-${node.text}`}
+                      className={styles.treeNode}
+                    >
+                      <span className={styles.treeYear}>{node.year}</span>
+                      <span className={styles.treeText}>{node.text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
         {slide.table && (
           <div className={styles.tableWrap}>
             <table className="table">

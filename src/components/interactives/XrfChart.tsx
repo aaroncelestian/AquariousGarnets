@@ -61,7 +61,7 @@ export function XrfChart({ active }: { active: boolean }) {
           y2={baseline}
           className={styles.axis}
         />
-        <text x="12" y="22" fontSize="11" fill="currentColor" opacity="0.5">
+        <text x="12" y="22" fontSize="13" fill="currentColor" opacity="0.5">
           cps/mA
         </text>
 
@@ -91,18 +91,18 @@ export function XrfChart({ active }: { active: boolean }) {
               />
               <text
                 x={x0 + 39}
-                y={baseline + 22}
+                y={baseline + 24}
                 textAnchor="middle"
                 className={styles.label}
-                fontSize="13"
+                fontSize="15"
               >
                 {d.el}
               </text>
               <text
                 x={x0 + 18}
-                y={baseline + 40}
+                y={baseline + 42}
                 textAnchor="middle"
-                fontSize="10"
+                fontSize="12"
                 fill="currentColor"
                 opacity={0.45 * uncOp}
               >
@@ -113,7 +113,7 @@ export function XrfChart({ active }: { active: boolean }) {
                 y={baseline - hC - 8}
                 textAnchor="middle"
                 className={styles.labelHi}
-                fontSize="12"
+                fontSize="14"
                 opacity={coatOp}
               >
                 {d.label}
@@ -124,11 +124,11 @@ export function XrfChart({ active }: { active: boolean }) {
 
         <g transform="translate(40, 310)">
           <rect width="14" height="10" className={styles.barCoated} />
-          <text x="20" y="10" fontSize="12" fill="currentColor">
+          <text x="20" y="10" fontSize="14" fill="currentColor">
             coated
           </text>
           <rect x="90" width="14" height="10" className={styles.barUncoated} />
-          <text x="110" y="10" fontSize="12" fill="currentColor">
+          <text x="110" y="10" fontSize="14" fill="currentColor">
             uncoated
           </text>
         </g>

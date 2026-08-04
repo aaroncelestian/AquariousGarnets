@@ -1,64 +1,95 @@
 import { useEffect, useState } from 'react'
 import styles from './Interactives.module.css'
 
+/** EDS atomic C:N of the coating sits just above the ~4.6 microbial center. */
+const COATING = 4.9
+const BIO_CENTER = 4.6
+const BIO_LO = 4.0
+const BIO_HI = 5.2
+const MAX_VAL = 10
+const VIEW_W = 760
+const X0 = 40
+const X1 = 620
+
+function xAt(value: number) {
+  return X0 + (value / MAX_VAL) * (X1 - X0)
+}
+
 export function CnRatio({ active }: { active: boolean }) {
-  const [x, setX] = useState(80)
-  const value = 4.9
-  const maxVal = 10
-  const x0 = 40
-  const x1 = 620
-  const target = x0 + (value / maxVal) * (x1 - x0)
+  const [x, setX] = useState(xAt(0))
+  const target = xAt(COATING)
+  const bioLo = xAt(BIO_LO)
+  const bioHi = xAt(BIO_HI)
+  const bioMid = xAt(BIO_CENTER)
 
   useEffect(() => {
     if (!active) {
-      setX(x0)
+      setX(xAt(0))
       return
     }
     const t = requestAnimationFrame(() => setX(target))
     return () => cancelAnimationFrame(t)
   }, [active, target])
 
+  // Percent of viewBox so CSS transform tracks scale (px would pin the marker wrong).
+  const xPct = (x / VIEW_W) * 100
+
   return (
     <figure className={styles.figure} style={{ marginTop: 24 }}>
       <svg
         className={styles.chart}
-        viewBox="0 0 760 140"
+        viewBox={`0 0 ${VIEW_W} 150`}
         role="img"
-        aria-label="Number line showing the coating's carbon to nitrogen ratio of 4.9 to 1 within the biological range of 4 to 6"
+        aria-label={`Number line: coating carbon to nitrogen ratio ${COATING} to 1, near the biological center of about ${BIO_CENTER} to 1`}
       >
-        <line x1={x0} y1="80" x2={x1} y2="80" className={styles.axis} />
+        <line x1={X0} y1="88" x2={X1} y2="88" className={styles.axis} />
+
         <rect
-          x={x0 + (4 / maxVal) * (x1 - x0)}
-          y="62"
-          width={(2 / maxVal) * (x1 - x0)}
+          x={bioLo}
+          y="70"
+          width={bioHi - bioLo}
           height="36"
           fill="color-mix(in srgb, var(--color-accent) 16%, transparent)"
         />
+        <line
+          x1={bioMid}
+          y1="70"
+          x2={bioMid}
+          y2="106"
+          stroke="var(--color-accent)"
+          strokeOpacity="0.35"
+          strokeWidth="1.5"
+          strokeDasharray="3 3"
+        />
         <text
-          x={x0 + (5 / maxVal) * (x1 - x0)}
-          y="52"
+          x={bioMid}
+          y="22"
           textAnchor="middle"
           className={styles.label}
           fontSize="12"
         >
-          biological range · 4–6 : 1
+          biological · ~{BIO_CENTER} : 1
         </text>
 
         <g
           style={{
-            transform: `translateX(${x}px)`,
-            transition: 'transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1)',
+            transformBox: 'view-box',
+            transformOrigin: '0px 0px',
+            transform: `translate(${xPct}%, 0)`,
+            transition: active
+              ? 'transform 0.85s cubic-bezier(0.2, 0.8, 0.2, 1)'
+              : 'none',
           }}
         >
           <line
             x1="0"
-            y1="55"
+            y1="62"
             x2="0"
-            y2="105"
+            y2="114"
             stroke="var(--color-accent)"
             strokeWidth="2.5"
           />
-          <circle cx="0" cy="55" r="7" fill="var(--color-accent)" />
+          <circle cx="0" cy="62" r="7" fill="var(--color-accent)" />
           <text
             x="0"
             y="40"
@@ -66,16 +97,16 @@ export function CnRatio({ active }: { active: boolean }) {
             className={styles.labelHi}
             fontSize="13"
           >
-            4.9 : 1 — the coating
+            {COATING} : 1 — the coating
           </text>
         </g>
 
-        <text x={x0} y="118" fontSize="11" fill="currentColor" opacity="0.5">
+        <text x={X0} y="132" fontSize="11" fill="currentColor" opacity="0.5">
           0
         </text>
         <text
-          x={x1}
-          y="118"
+          x={X1}
+          y="132"
           textAnchor="end"
           fontSize="11"
           fill="currentColor"
@@ -84,19 +115,19 @@ export function CnRatio({ active }: { active: boolean }) {
           10+
         </text>
         <line
-          x1={x1}
-          y1="80"
+          x1={X1}
+          y1="88"
           x2="700"
-          y2="80"
+          y2="88"
           className={styles.axis}
           strokeDasharray="4 6"
         />
-        <text x="720" y="86" className={styles.label} fontSize="16">
+        <text x="720" y="94" className={styles.label} fontSize="16">
           ∞
         </text>
         <text
           x="700"
-          y="55"
+          y="62"
           textAnchor="end"
           fontSize="11"
           fill="currentColor"

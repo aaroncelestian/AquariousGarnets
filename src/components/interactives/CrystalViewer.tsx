@@ -71,11 +71,17 @@ function Bond({
   )
 }
 
-function Scene({ active }: { active: boolean }) {
+function Scene({
+  active,
+  backdrop,
+}: {
+  active: boolean
+  backdrop: boolean
+}) {
   const group = useRef<THREE.Group>(null)
   const reduced = usePrefersReducedMotion()
-  const edges = useDodecahedronEdges(4.2)
-  const scale = 0.42
+  const edges = useDodecahedronEdges(backdrop ? 4.8 : 4.2)
+  const scale = backdrop ? 0.48 : 0.42
 
   useFrame((_, dt) => {
     if (!group.current || reduced || !active) return
@@ -90,16 +96,17 @@ function Scene({ active }: { active: boolean }) {
       <ambientLight intensity={0.65} />
       <directionalLight position={[6, 8, 4]} intensity={1.1} />
       <directionalLight position={[-4, -2, -6]} intensity={0.35} />
-      <group ref={group}>
+      {/* Bias right so copy can sit on the left without covering the habit */}
+      <group ref={group} position={backdrop ? [2.35, 0.1, 0] : [0, 0, 0]}>
         {/* Habit wireframe */}
         {edges.map((pair, i) => (
           <Line
             key={i}
             points={pair}
             color="#ec3013"
-            lineWidth={1.2}
+            lineWidth={backdrop ? 1.35 : 1.2}
             transparent
-            opacity={0.55}
+            opacity={backdrop ? 0.62 : 0.55}
           />
         ))}
 
@@ -137,14 +144,24 @@ function Scene({ active }: { active: boolean }) {
         enableZoom={false}
         autoRotate={false}
         makeDefault
+        target={backdrop ? [2.35, 0.1, 0] : [0, 0, 0]}
       />
     </>
   )
 }
 
-export function CrystalViewer({ active }: { active: boolean }) {
+export function CrystalViewer({
+  active,
+  backdrop = false,
+}: {
+  active: boolean
+  backdrop?: boolean
+}) {
   return (
-    <div className={styles.crystal}>
+    <div
+      className={styles.crystal}
+      data-backdrop={backdrop || undefined}
+    >
       <div className={styles.legend}>
         <div className={styles.legendRow}>
           <span className={styles.swatch} style={{ background: '#ec3013' }} /> Si
@@ -161,12 +178,15 @@ export function CrystalViewer({ active }: { active: boolean }) {
       </div>
       <Canvas
         dpr={[1, 1.75]}
-        camera={{ position: [0, 1.2, 9.5], fov: 40 }}
+        camera={{
+          position: backdrop ? [0.4, 1.35, 10.5] : [0, 1.2, 9.5],
+          fov: backdrop ? 38 : 40,
+        }}
         gl={{ antialias: true, alpha: true }}
         style={{ width: '100%', height: '100%' }}
       >
         <Suspense fallback={null}>
-          <Scene active={active} />
+          <Scene active={active} backdrop={backdrop} />
         </Suspense>
       </Canvas>
       <div className={styles.crystalCaption}>

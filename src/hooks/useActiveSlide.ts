@@ -3,6 +3,38 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 export function useActiveSlide(count: number) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [activeIndex, setActiveIndex] = useState(0)
+  const activeIndexRef = useRef(0)
+  const pendingIndexRef = useRef<number | null>(null)
+  const settleTimerRef = useRef<number | null>(null)
+
+  const setIndex = useCallback((index: number) => {
+    activeIndexRef.current = index
+    setActiveIndex(index)
+  }, [])
+
+  const goTo = useCallback(
+    (index: number) => {
+      const root = containerRef.current
+      if (!root) return
+      const clamped = Math.max(0, Math.min(count - 1, index))
+      const el = root.querySelector<HTMLElement>(`[data-slide-index="${clamped}"]`)
+      if (!el) return
+
+      pendingIndexRef.current = clamped
+      setIndex(clamped)
+
+      // Position from the scroll container so snap + keyboard stay in sync.
+      const top = el.offsetTop
+      root.scrollTo({ top, behavior: 'smooth' })
+
+      if (settleTimerRef.current) window.clearTimeout(settleTimerRef.current)
+      settleTimerRef.current = window.setTimeout(() => {
+        pendingIndexRef.current = null
+        settleTimerRef.current = null
+      }, 450)
+    },
+    [count, setIndex],
+  )
 
   useEffect(() => {
     const root = containerRef.current
@@ -11,6 +43,9 @@ export function useActiveSlide(count: number) {
     const sections = root.querySelectorAll<HTMLElement>('[data-slide-index]')
     const observer = new IntersectionObserver(
       (entries) => {
+        // While a keyboard/TOC jump is in flight, trust the pending target only.
+        if (pendingIndexRef.current !== null) return
+
         let best: { index: number; ratio: number } | null = null
         for (const entry of entries) {
           if (!entry.isIntersecting) continue
@@ -19,20 +54,31 @@ export function useActiveSlide(count: number) {
             best = { index, ratio: entry.intersectionRatio }
           }
         }
-        if (best) setActiveIndex(best.index)
+        if (best && best.index !== activeIndexRef.current) {
+          setIndex(best.index)
+        }
       },
-      { root, threshold: [0.35, 0.55, 0.75] },
+      { root, threshold: [0.5, 0.75, 0.9] },
     )
 
     sections.forEach((s) => observer.observe(s))
     return () => observer.disconnect()
-  }, [count])
+  }, [count, setIndex])
 
-  const goTo = useCallback((index: number) => {
+  useEffect(() => {
     const root = containerRef.current
     if (!root) return
-    const el = root.querySelector<HTMLElement>(`[data-slide-index="${index}"]`)
-    el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+
+    const onScrollEnd = () => {
+      pendingIndexRef.current = null
+      if (settleTimerRef.current) {
+        window.clearTimeout(settleTimerRef.current)
+        settleTimerRef.current = null
+      }
+    }
+
+    root.addEventListener('scrollend', onScrollEnd)
+    return () => root.removeEventListener('scrollend', onScrollEnd)
   }, [])
 
   useEffect(() => {
@@ -46,12 +92,14 @@ export function useActiveSlide(count: number) {
         (e.target as HTMLElement)?.isContentEditable
       if (editable) return
 
+      const current = pendingIndexRef.current ?? activeIndexRef.current
+
       if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) {
         e.preventDefault()
-        goTo(Math.min(count - 1, activeIndex + 1))
+        goTo(current + 1)
       } else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) {
         e.preventDefault()
-        goTo(Math.max(0, activeIndex - 1))
+        goTo(current - 1)
       } else if (e.key === 'Home') {
         e.preventDefault()
         goTo(0)
@@ -62,7 +110,13 @@ export function useActiveSlide(count: number) {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [activeIndex, count, goTo])
+  }, [count, goTo])
+
+  useEffect(() => {
+    return () => {
+      if (settleTimerRef.current) window.clearTimeout(settleTimerRef.current)
+    }
+  }, [])
 
   return { containerRef, activeIndex, goTo }
 }

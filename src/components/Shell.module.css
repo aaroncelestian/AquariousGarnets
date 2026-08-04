@@ -4,11 +4,13 @@
   overflow-y: auto;
   overflow-x: hidden;
   scroll-snap-type: y mandatory;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   background: var(--color-bg);
 }
 
 .slide {
+  box-sizing: border-box;
+  flex: none;
   min-height: 100vh;
   min-height: 100dvh;
   height: 100vh;
@@ -34,8 +36,10 @@
 }
 
 .slide.bleed .slideInner,
-.slide.cover .slideInner {
+.slide.cover .slideInner,
+.slide.stage .slideInner {
   max-width: none;
+  padding: 0;
 }
 
 .nav {
@@ -73,11 +77,12 @@
 
 .toc {
   position: fixed;
-  left: 16px;
+  right: 16px;
   bottom: 16px;
   z-index: 50;
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
   gap: 4px;
   opacity: 0.45;
   transition: opacity 150ms ease;
@@ -90,28 +95,28 @@
 
 .tocBtn {
   font-family: var(--font-heading);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   border: none;
   background: color-mix(in srgb, var(--color-bg) 85%, transparent);
   color: var(--color-text);
-  padding: 6px 10px;
+  padding: 7px 10px;
   cursor: pointer;
-  text-align: left;
-  border-left: 2px solid transparent;
+  text-align: right;
+  border-right: 2px solid transparent;
 }
 
 .tocBtn[data-active="true"] {
-  border-left-color: var(--color-accent);
+  border-right-color: var(--color-accent);
   color: var(--color-accent);
 }
 
 .counter {
   position: fixed;
   bottom: 16px;
-  right: 20px;
+  left: 20px;
   z-index: 50;
   font-size: 12px;
   font-feature-settings: "tnum" 1;
@@ -129,9 +134,15 @@
   .toc {
     flex-direction: row;
     flex-wrap: wrap;
+    justify-content: flex-end;
     max-width: calc(100vw - 100px);
-    left: 12px;
+    right: 12px;
+    left: auto;
     bottom: 12px;
   }
   .tocBtn { font-size: 10px; padding: 4px 6px; }
+  .counter {
+    left: 12px;
+    right: auto;
+  }
 }

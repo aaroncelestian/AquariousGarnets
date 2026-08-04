@@ -4,15 +4,20 @@ export type LayoutKind =
   | 'content'
   | 'split'
   | 'bleed'
+  | 'stage'
   | 'hero'
   | 'cols'
 
 export type InteractiveKind =
   | 'locality-map'
   | 'xrf-chart'
+  | 'libs-blast'
   | 'libs-peel'
   | 'cn-ratio'
   | 'crystal-viewer'
+  | 'raman-bands'
+  | 'raman-maturity'
+  | 'raman-zoom'
 
 export type ChapterId = 'intro' | 'discovery' | 'chemistry' | 'receipt' | 'next'
 
@@ -29,8 +34,12 @@ export interface Slide {
   body?: string
   bullets?: string[]
   cols?: { heading: string; body: string }[]
+  timeline?: { year: string; text: string }[]
+  tree?: { year: string; text: string }[][]
   table?: { headers: string[]; rows: string[][] }
-  image?: { src: string; alt: string }
+  image?: { src: string; alt: string; fit?: 'cover' | 'contain' }
+  figures?: { src: string; alt: string; caption?: string }[]
+  slideshow?: { src: string; alt: string }[]
   meta?: string
   ghostNum?: string
   heroNum?: string
@@ -45,48 +54,22 @@ export const CHAPTERS: { id: ChapterId; num: string; title: string }[] = [
   { id: 'next', num: '04', title: "What's Next" },
 ]
 
-const SUBSTACK = {
-  talus:
-    'https://substackcdn.com/image/fetch/$s_!yrWP!,w_1200,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fc3edff55-74b8-44e0-ab7d-32cc18df4497_2048x1535.jpeg',
-  expected:
-    'https://substackcdn.com/image/fetch/$s_!H6YP!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F3a076bd6-a8b8-4c22-8bcd-2a7ebc27d012_2048x1460.jpeg',
-  green:
-    'https://substackcdn.com/image/fetch/$s_!yn_S!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Feffbff5e-bd14-4496-8ed5-96da18beb938_2048x1907.jpeg',
-  worn:
-    'https://substackcdn.com/image/fetch/$s_!WfZj!,w_1200,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fcf8c1b56-6c88-4dd2-bf7e-5e8b878bb378_1139x1080.jpeg',
-  sem: 'https://substackcdn.com/image/fetch/$s_!Q7BW!,w_1200,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F0b62bb7d-ae38-479e-8523-e852ffc1c9a5_1280x1024.png',
-}
-
 export const slides: Slide[] = [
+  // ── Intro ──────────────────────────────────────────────
   {
     id: 'title',
     label: 'Title',
     chapter: 'intro',
     layout: 'cover',
-    kicker: 'Pocketful of Xtals',
-    displayTitle: "A Garnet I Still\nCan't Explain",
+    displayTitle: 'A Garnet\nI Can\nFinally\nExplain',
     subtitle:
-      'Thirty-five years with a coating nobody had described — the Aquarius Mountains garnets, and what three instruments found on their surface.',
+      'Thirty-five years. One coating nobody had described. Three instruments. An open investigation.',
     meta: 'Aaron Celestian, PhD · Curator of Mineral Sciences, NHMLA',
     image: {
-      src: '/images/garnet-macro.jpg',
-      alt: 'Dark metallic garnet crystal in white matrix',
+      src: '/images/best-garnet.jpg',
+      alt: 'Metallic black garnet crystal in light matrix with a bright specular facet',
     },
-    notes:
-      'Welcome. This talk follows an open investigation still in progress — three Substack posts, three instruments, one unanswered question at the end.',
-  },
-  {
-    id: 'contents',
-    label: 'Contents',
-    chapter: 'intro',
-    layout: 'content',
-    title: 'Contents',
-    bullets: [
-      '01 — The Discovery',
-      '02 — Reading the Chemistry',
-      '03 — The Receipt',
-      "04 — What's Next",
-    ],
+    notes: 'Open on wonder — not on methodology.',
   },
   {
     id: 'about',
@@ -94,14 +77,37 @@ export const slides: Slide[] = [
     chapter: 'intro',
     layout: 'content',
     kicker: 'Introduction',
-    title: 'About this collection',
-    bullets: [
-      'Curator of Mineral Sciences, Natural History Museum of Los Angeles County',
-      'Former scientist, NASA Jet Propulsion Laboratory; adjunct professor, USC',
-      'The specimens in this talk are family collecting trips going back 35 years, now part of the NHMLA research collection',
-      'Everything here is written up as an open investigation on Substack — Pocketful of Xtals',
+    title: 'Why it took 35 years',
+    body: 'One sample at the root. Everything after branched out until the instruments — and the question — were ready.',
+    tree: [
+      [
+        { year: '2026–', text: 'National Fellow, Explorers Club' },
+        { year: '2025–', text: 'CTO, BrineWorks' },
+        { year: '2023', text: 'R&D 100 Invention of the Year' },
+      ],
+      [
+        { year: '2021–', text: 'Adjunct Prof., West LA College' },
+        { year: '2020–23', text: 'Principal Scientist, MiST' },
+        { year: '2018–25', text: 'NASA Research Scientist' },
+      ],
+      [
+        { year: '2016–', text: 'Curator of Mineral Sciences, NHMLA' },
+        { year: '2016–', text: 'Adjunct Professor, USC' },
+      ],
+      [
+        { year: '2014–16', text: 'VP Research, TerraNova LLC' },
+        { year: '2011–15', text: 'Director, Advanced Materials Lab' },
+        { year: '2008–15', text: 'Professor, Western Kentucky' },
+      ],
+      [{ year: '2007', text: 'Professor, CUNY Queens College' }],
+      [{ year: '2006', text: 'Ph.D., Stony Brook — nuclear waste storage' }],
+      [{ year: '2002', text: 'M.S., Stony Brook — zeolites' }],
+      [{ year: '1999', text: 'B.S. Geology / Mineralogy, U of Arizona' }],
+      [{ year: '≈1991', text: 'High school — collected the garnet, age 15' }],
     ],
   },
+
+  // ── 01 The Discovery ───────────────────────────────────
   {
     id: 'discovery-divider',
     label: 'The Discovery',
@@ -114,106 +120,145 @@ export const slides: Slide[] = [
     id: 'locality',
     label: 'Locality',
     chapter: 'discovery',
-    layout: 'content',
-    kicker: '01 · The Discovery',
-    title: 'The Aquarius Mountains',
-    body: 'The range sits on the transition itself — the high, ancient Colorado Plateau to the northeast giving way to the stretched, faulted Basin and Range to the southwest. The rhyolite here is Miocene, roughly 24 to 20 million years old.',
-    interactive: 'locality-map',
-  },
-  {
-    id: 'collecting',
-    label: 'Collecting',
-    chapter: 'discovery',
     layout: 'split',
     kicker: '01 · The Discovery',
-    title: 'Walking the talus',
-    body: "You find these garnets by walking the slopes below the rhyolite outcrops, eyes down, until the light catches something that doesn't belong to the dirt. My family has been coming here for decades.",
+    title: 'The Aquarius Mountains',
+    body: 'Mohave County, Arizona — where the Colorado Plateau gives way to the Basin and Range. Miocene rhyolite, 24 to 20 million years old.',
+    interactive: 'locality-map',
+    notes: 'Point out park → climb → garnet horizon. Emphasize the terrain.',
+  },
+  {
+    id: 'orange-layer',
+    label: 'Orange layer',
+    chapter: 'discovery',
+    layout: 'content',
+    kicker: '01 · The Discovery',
+    title: 'The orange layer',
+    body: 'The garnets come from a distinct orange horizon — and from cavities where volcanic gases once escaped.',
+    figures: [
+      {
+        src: '/images/elephant-butte-face.jpg',
+        alt: 'Elephant Butte face with orange garnet-producing layer',
+        caption:
+          'Elephant Butte. The garnet-producing layer is the orange rock. Walk the talus below it.',
+      },
+      {
+        src: '/images/elephant-butte-conduit.jpg',
+        alt: 'Gas conduit textures in the rhyolite',
+      },
+    ],
+  },
+  {
+    id: 'eddies',
+    label: 'Gas eddies',
+    chapter: 'discovery',
+    layout: 'bleed',
+    kicker: '01 · The Discovery',
+    title: 'Grown from steam',
+    body: 'Vapor-phase crystallization — minerals growing directly from volcanic gas, no liquid step.',
     image: {
-      src: SUBSTACK.talus,
-      alt: 'The Aquarius Mountains at Elephant Butte, showing the orange garnet-producing layer in the rhyolite',
+      src: '/images/eddies-garnets.jpg',
+      alt: 'Rhyolite cavities with garnets in eddy pockets',
     },
   },
   {
     id: 'expected',
-    label: 'The expected garnet',
+    label: 'Expected garnet',
     chapter: 'discovery',
-    layout: 'split',
+    layout: 'bleed',
     kicker: '01 · The Discovery',
     title: 'Black. Bright. Expected.',
-    body: 'Perfectly formed dodecahedra, sitting loose in their rust-orange weathering pockets or still seated in the rhyolite. Not rare, not valuable — known to collectors for decades. Most of the time, this is exactly what you find.',
+    body: 'Perfect dodecahedra — known to collectors for decades.',
     image: {
       src: '/images/garnet-in-matrix.jpg',
-      alt: 'An ordinary black, mirror-bright garnet dodecahedron seated in light matrix',
+      alt: 'Ordinary black mirror-bright garnet in matrix',
     },
   },
   {
     id: 'crystal',
     label: 'Crystal structure',
     chapter: 'discovery',
-    layout: 'split',
+    layout: 'stage',
     kicker: '01 · The Discovery',
-    title: 'A dodecahedron full of atoms',
-    body: 'Garnet crystallizes in the cubic space group Ia‑3d. Drag to orbit — the outer wireframe is the crystal habit; inside is the ball-and-stick framework from structure data (andradite prototype; same topology as almandine).',
+    title: 'One framework. Three chemistries.',
+    body: 'Garnet crystallizes in cubic Ia‑3d. The pyralspite series shares that architecture — only the X-site cation changes. Drag anywhere to orbit.',
+    cols: [
+      {
+        heading: 'Pyrope',
+        body: 'Mg₃Al₂(SiO₄)₃ — magnesium end-member; high-P mantle and deep crust.',
+      },
+      {
+        heading: 'Almandine',
+        body: 'Fe₃Al₂(SiO₄)₃ — iron end-member. Aquarius Mountains sits here.',
+      },
+      {
+        heading: 'Spessartine',
+        body: 'Mn₃Al₂(SiO₄)₃ — manganese end-member; pegmatites and Mn-rich rocks.',
+      },
+    ],
     interactive: 'crystal-viewer',
+    notes:
+      'Wireframe = habit. Ball-and-stick = shared framework (andradite prototype; same topology). Emphasize solid solution, then land on almandine.',
   },
   {
     id: 'anomaly',
-    label: 'The anomaly',
+    label: 'The green one',
     chapter: 'discovery',
     layout: 'bleed',
     kicker: '01 · The Discovery',
-    title: "The one that shouldn't reflect green",
-    body: "A cold, metallic green — the kind you associate with a beetle's wing, not a silicate mineral. I turned it in my hand. The color moved. It was not a reflection of the sky. I was fifteen. We had no framework for it.",
+    title: 'It shouldn’t reflect green',
+    body: 'A cold, metallic green — like a beetle’s wing. I was fifteen. We had no framework for it.',
     image: {
-      src: SUBSTACK.green,
-      alt: 'A garnet with a metallic, iridescent green coating, catching the light',
+      src: '/images/coated-garnet.jpg',
+      alt: 'Garnet with metallic iridescent green coating',
     },
+  },
+  {
+    id: 'two-kinds',
+    label: 'Two kinds',
+    chapter: 'discovery',
+    layout: 'bleed',
+    kicker: '01 · The Discovery',
+    title: 'Side by side',
+    body: 'Same boulder, same habit, one coated, one not.',
+    slideshow: [
+      {
+        src: '/images/best-garnet.jpg',
+        alt: 'Dark metallic coated garnet in light matrix',
+      },
+      {
+        src: '/images/slideshow-opal.jpg',
+        alt: 'Garnet crystal seated in pale opaline host rock',
+      },
+      {
+        src: '/images/slideshow-macro-coat.jpg',
+        alt: 'Close macro of metallic coating on garnet facets',
+      },
+      {
+        src: '/images/slideshow-garnet-2.jpg',
+        alt: 'Garnet dodecahedron on tan porous matrix',
+      },
+      {
+        src: '/images/slideshow-garnet-3a.jpg',
+        alt: 'Garnet crystal on light matrix, soft focus background',
+      },
+    ],
   },
   {
     id: 'coating',
-    label: 'A coating, not a species',
+    label: 'A coating',
     chapter: 'discovery',
-    layout: 'split',
+    layout: 'bleed',
     kicker: '01 · The Discovery',
-    title: 'A coating, not a new mineral',
-    body: 'Years in, I noticed the worn edges — spots where the metallic surface had peeled away. Underneath: black, ordinary, mirror-bright garnet. The same mineral underneath, with something thin and green on top.',
+    title: 'A coating — not a new mineral',
+    body: 'Worn edges peel away. Underneath: ordinary black garnet.',
     image: {
-      src: SUBSTACK.worn,
-      alt: 'A garnet showing the green coating worn away at the edge, revealing black garnet underneath',
+      src: '/images/coating-worn.jpg',
+      alt: 'Green coating worn away revealing black garnet',
     },
   },
-  {
-    id: 'vapor',
-    label: 'How they formed',
-    chapter: 'discovery',
-    layout: 'cols',
-    kicker: '01 · The Discovery',
-    title: 'Garnets that grew from steam',
-    cols: [
-      {
-        heading: 'Not a skarn, not hydrothermal',
-        body: 'Most andradite-group garnets form in skarns, where magma meets limestone, or in hydrothermal veins where hot fluids move through fractured rock.',
-      },
-      {
-        heading: 'Vapor-phase crystallization',
-        body: 'These grew directly from volcanic gases in cavities within the cooling rhyolite — no liquid step at all. The rhyolite itself is roughly 24 to 20 million years old.',
-      },
-    ],
-  },
-  {
-    id: 'two-records',
-    label: 'Two records',
-    chapter: 'discovery',
-    layout: 'content',
-    kicker: '01 · The Discovery',
-    title: 'Two records, one crystal',
-    bullets: [
-      'The garnet crystallized from vapor when the rhyolite was still cooling',
-      'The coating formed later, on crystals that had already solidified',
-      'Not every garnet in the same pocket carries it — some coated, some not, no obvious pattern',
-      'Nobody had published on this coating before. The rest of this talk is the investigation',
-    ],
-  },
+
+  // ── 02 Reading the Chemistry ──────────────────────────
   {
     id: 'chemistry-divider',
     label: 'Reading the Chemistry',
@@ -223,138 +268,49 @@ export const slides: Slide[] = [
     title: 'Reading the Chemistry',
   },
   {
-    id: 'xrf-explain',
-    label: 'XRF',
+    id: 'something-chose',
+    label: 'Something chose',
     chapter: 'chemistry',
-    layout: 'content',
+    layout: 'bleed',
     kicker: '02 · Reading the Chemistry',
-    title: 'What XRF measures',
-    bullets: [
-      'X-ray fluorescence fires X-rays at a sample; each element responds at its own characteristic energy',
-      'The beam here is 1.2 millimeters wide and sums everything it hits into one spectrum',
-      'The coating is only 100–700 nanometers thick — far too thin for this beam to see. It reads straight through to the garnet',
-      'Seven spectra total: three uncoated specimens, four coated',
-    ],
+    title: 'Something chose this garnet',
+    body: 'The coating finds one population and leaves the other alone.',
+    image: {
+      src: '/images/eddies-coated.jpg',
+      alt: 'Coated garnets in rhyolite cavities',
+    },
   },
   {
     id: 'xrf-chart',
-    label: 'Two populations',
+    label: 'XRF',
     chapter: 'chemistry',
     layout: 'split',
     kicker: '02 · Reading the Chemistry',
     title: 'Two populations, one outcrop',
-    body: 'Blue is the uncoated population, averaged across three measurements. Orange is the coated population, averaged across four. Iron and manganese — the garnet signal — are large in both. Everything else diverges.',
+    body: 'XRF reads through the nanometer film — into the crystals themselves. Iron and manganese match. Everything else diverges.',
     interactive: 'xrf-chart',
   },
   {
-    id: 'signature',
-    label: 'The signature',
-    chapter: 'chemistry',
-    layout: 'content',
-    kicker: '02 · Reading the Chemistry',
-    title: "The coated population's signature",
-    table: {
-      headers: ['Element', 'Coated', 'Uncoated', 'Reading'],
-      rows: [
-        [
-          'Scandium',
-          '~58 cps/mA',
-          'Not detected',
-          'No site in almandine — points to a mafic fluid source',
-        ],
-        [
-          'Chromium',
-          '~200 cps/mA',
-          'Not detected',
-          'Largest single difference — chromite, a mafic signature',
-        ],
-        [
-          'Zinc',
-          '~65 cps/mA',
-          'Not detected',
-          'Volatile-soluble, concentrates in vapor phases',
-        ],
-        [
-          'Phosphorus + calcium',
-          'Elevated together',
-          'Near zero',
-          'Consistent with apatite micro-inclusions',
-        ],
-        [
-          'Potassium : Rubidium',
-          'K high, Rb absent',
-          'K lower, Rb present',
-          'K/Rb ~1000 = mafic fluid; below 200 = evolved, felsic',
-        ],
-      ],
-    },
-  },
-  {
-    id: 'pyralspite',
-    label: 'Pyralspite reference',
-    chapter: 'chemistry',
-    layout: 'content',
-    kicker: '02 · Reading the Chemistry',
-    title: 'The pyralspite series',
-    table: {
-      headers: ['Species', 'Formula', 'Note'],
-      rows: [
-        [
-          'Pyrope',
-          'Mg₃Al₂Si₃O₁₂',
-          'Magnesium end member — not what this locality produces',
-        ],
-        [
-          'Almandine',
-          'Fe₃Al₂Si₃O₁₂',
-          'Iron-rich end member — the Aquarius Mountains garnets',
-        ],
-        [
-          'Spessartine',
-          'Mn₃Al₂Si₃O₁₂',
-          'Manganese-rich end member — the other axis the XRF measured',
-        ],
-        [
-          'Andradite',
-          'Ca₃Fe₂Si₃O₁₂',
-          'The original field call for this locality, based on habit alone',
-        ],
-      ],
-    },
-  },
-  {
-    id: 'correction',
-    label: 'Correction',
-    chapter: 'chemistry',
-    layout: 'content',
-    kicker: '02 · Reading the Chemistry',
-    title: 'Correcting the record',
-    bullets: [
-      'These garnets were called andradite throughout the first two posts — black, dodecahedral, volcanic context',
-      'That identification was field observation, not chemistry',
-      "The XRF data, and Mindat's listing for this locality, both point to almandine instead",
-      'The garnet identity is now itself part of the open investigation',
-    ],
-  },
-  {
-    id: 'two-pulses',
-    label: 'Mafic vs felsic',
+    id: 'mafic-signal',
+    label: 'Mafic signal',
     chapter: 'chemistry',
     layout: 'cols',
     kicker: '02 · Reading the Chemistry',
-    title: 'Two vapor pulses, two garnets',
+    title: 'Two vapor pulses',
     cols: [
       {
-        heading: 'Population A — uncoated',
-        body: 'Lower K/Rb, measurable rubidium — a vapor pulse from a more evolved, purely rhyolitic source.',
+        heading: 'Uncoated',
+        body: 'Lower K/Rb, measurable rubidium — a more evolved rhyolitic vapor.',
       },
       {
-        heading: 'Population B — coated',
-        body: 'K/Rb near 1000, scandium and chromium present — a vapor pulse carrying a mafic signature, from somewhere in the same volcanic field.',
+        heading: 'Coated',
+        body: 'Sc, Cr, Zn present. K without Rb — a mafic fluid signature the coating could read.',
       },
     ],
-    body: 'The Aquarius Mountains volcanic field runs from primitive basalt through to rhyolite over roughly 400 km². Tracing the exact fluid pathway is fieldwork still to be done.',
+    body: 'Same mountain range. Different chemistries written into the crystals before the coating ever arrived.',
   },
+
+  // ── 03 The Receipt ─────────────────────────────────────
   {
     id: 'receipt-divider',
     label: 'The Receipt',
@@ -363,133 +319,200 @@ export const slides: Slide[] = [
     ghostNum: '03',
     title: 'The Receipt',
   },
+
   {
-    id: 'raman-explain',
-    label: 'Raman',
-    chapter: 'receipt',
-    layout: 'content',
-    kicker: '03 · The Receipt',
-    title: 'What Raman spectroscopy reveals',
-    bullets: [
-      'A laser fires at the surface; a tiny fraction of the light returns shifted in frequency',
-      'The shift is specific to the vibrating chemical bond — a fingerprint, not a rough guess',
-      "On a coating this thin, the laser reads mostly what's on the surface, not the garnet beneath",
-      'The uncoated garnet came back as clean almandine. The coating came back as something else',
-    ],
+    id: 'dendrite-1',
+    label: 'Dendrite I',
+    chapter: 'chemistry',
+    layout: 'bleed',
+    kicker: '02 · Reading the Chemistry',
+    title: 'Not how minerals grow',
+    body: 'A branching front advancing across bare garnet — diffusion-limited. Film, not crust.',
+    image: {
+      src: '/images/dendrite-1.jpg',
+      alt: 'Optical micrograph of dendritic coating margin on garnet',
+    },
+    notes: 'Linger here. These are the hero images.',
   },
   {
-    id: 'hematite-carbon',
-    label: 'Hematite and carbon',
-    chapter: 'receipt',
-    layout: 'split',
-    kicker: '03 · The Receipt',
-    title: 'Hematite, then carbon',
-    body: "At the coating margin: hematite, an iron oxide — the garnet's iron converted from its stable ferrous form to oxidized ferric. Elsewhere: disordered organic carbon, thermally immature — never cooked, never buried deep.",
+    id: 'dendrite-2',
+    label: 'Dendrite II',
+    chapter: 'chemistry',
+    layout: 'bleed',
+    kicker: '02 · Reading the Chemistry',
+    title: 'The coating spreads',
+    body: 'Rainbow shimmer = thin-film interference. Nanometers thick.',
     image: {
-      src: '/images/garnet-raman.png',
-      alt: 'Raman spectra showing garnet, hematite, and organic carbon peaks',
+      src: '/images/dendrite-2.jpg',
+      alt: 'Optical micrograph showing iridescent dendritic coating',
     },
   },
   {
-    id: 'libs',
+    id: 'dendrite-3',
+    label: 'Dendrite III',
+    chapter: 'chemistry',
+    layout: 'bleed',
+    kicker: '02 · Reading the Chemistry',
+    title: 'It looks alive',
+    body: 'The morphology of systems growing under diffusion limitation — or of a biofilm expanding across a surface.',
+    image: {
+      src: '/images/dendrite-3.jpg',
+      alt: 'Optical micrograph of dendritic spreading margin',
+    },
+  },
+
+  {
+    id: 'raman',
+    label: 'Raman',
+    chapter: 'receipt',
+    layout: 'bleed',
+    kicker: '03 · The Receipt',
+    title: 'Raman: hematite, then carbon',
+    body: 'Iron oxide at the margin. Disordered organic carbon on top — thermally immature. Tap the spectrum to zoom.',
+    image: {
+      src: '/images/raman-comparison.png',
+      alt: 'Raman spectra comparing uncoated garnet and organic-rich coating',
+      fit: 'contain',
+    },
+    interactive: 'raman-zoom',
+    notes:
+      'Tap through: full spectrum → hematite (low cm⁻¹) → carbon D/G (high cm⁻¹) → zoom out.',
+  },
+  {
+    id: 'raman-bands',
+    label: 'D & G',
+    chapter: 'receipt',
+    layout: 'split',
+    kicker: '03 · The Receipt',
+    title: 'Where the D and G bands come from',
+    body: 'Two vibrations of aromatic carbon. G is the ring’s stretch; D is its breathing — and breathing only shows up when the lattice is disordered.',
+    interactive: 'raman-bands',
+    notes:
+      'Toggle G vs D. Strong D means thermally immature organic carbon — never cooked into graphite.',
+  },
+  {
+    id: 'raman-maturity',
+    label: 'Maturity',
+    chapter: 'receipt',
+    layout: 'split',
+    kicker: '03 · The Receipt',
+    title: 'Carbon remembers heat',
+    body: 'Fresh organic matter fluoresces. Heat orders the lattice — broad D and G bands appear, then sharpen toward graphite. A visual aid, not a calculation.',
+    interactive: 'raman-maturity',
+    notes: 'Park the slider near “Disordered carbon” — that’s the coating.',
+  },
+  {
+    id: 'libs-intro',
     label: 'LIBS',
     chapter: 'receipt',
     layout: 'split',
     kicker: '03 · The Receipt',
-    title: 'The plywood discovery',
-    bullets: [
-      'Laser-induced breakdown spectroscopy (LIBS) vaporizes a tiny amount of surface per pulse, reading it layer by layer',
-      "The coating didn't vaporize evenly — it delaminated, the way old plywood separates along its ply boundaries",
-      'Two distinct layers, each lifting cleanly, each measured separately with Raman',
-      'Stratigraphy, bottom to top: garnet → hematite → organic carbon. A sequence, in order',
-    ],
-    interactive: 'libs-peel',
+    title: 'A laser reads the surface',
+    body: 'LIBS ablates a microscopic pit — only a few micrometers deep — and the plasma flash reports a near-complete elemental suite in one shot.',
+    interactive: 'libs-blast',
+    notes: 'Fire the pulse once for the room. Emphasize surface + elements, not depth math.',
   },
   {
-    id: 'sem',
-    label: 'SEM',
+    id: 'libs',
+    label: 'Delamination',
     chapter: 'receipt',
     layout: 'split',
     kicker: '03 · The Receipt',
-    title: 'The coating at 7,500×',
-    body: "Packed, rounded, sub-spherical structures, 0.5 to 2 micrometers across — no flat faces, no angular boundaries. Minerals crystallizing from solution grow geometric forms. This isn't that. The size matches coccoid bacteria.",
+    title: 'It peeled like plywood',
+    body: 'On this coating the pulse didn’t just vaporize — it delaminated. Carbon lifts, then hematite. Garnet stays.',
+    interactive: 'libs-peel',
+  },
+  {
+    id: 'sem-1',
+    label: 'SEM I',
+    chapter: 'receipt',
+    layout: 'bleed',
+    kicker: '03 · The Receipt',
+    title: '7,500×',
+    body: 'Packed, rounded structures — 0.5 to 2 μm. No flat crystal faces.',
     image: {
-      src: SUBSTACK.sem,
-      alt: 'SEM image at 7500x magnification showing packed sub-spherical globular structures on the coating surface',
+      src: '/images/sem-1.jpg',
+      alt: 'SEM of globular coating surface',
+    },
+    notes: 'Size matches coccoid bacteria. Let the image work.',
+  },
+  {
+    id: 'sem-2',
+    label: 'SEM II',
+    chapter: 'receipt',
+    layout: 'bleed',
+    kicker: '03 · The Receipt',
+    title: 'Not geometric',
+    body: 'Minerals from solution grow angles. This doesn’t.',
+    image: {
+      src: '/images/sem-2.jpg',
+      alt: 'SEM close-up of coating globules',
     },
   },
   {
-    id: 'eds',
-    label: 'EDS',
+    id: 'sem-3',
+    label: 'SEM III',
     chapter: 'receipt',
-    layout: 'cols',
+    layout: 'bleed',
     kicker: '03 · The Receipt',
-    title: 'What EDS found in the coating',
-    cols: [
-      {
-        heading: 'Carbon — 31.5%',
-        body: 'Confirms the organic carbon Raman already identified, and puts a number on it.',
-      },
-      {
-        heading: 'Nitrogen — 7.5%',
-        body: 'No mineral phase at this locality explains a nitrogen signal. It is the structural backbone of amino acids and proteins.',
-      },
-      {
-        heading: 'Phosphorus — 2.1%',
-        body: 'The backbone of nucleic acids and cell membranes. Sodium, potassium and chlorine here are just a fingerprint.',
-      },
-    ],
+    title: 'The architecture of a film',
+    image: {
+      src: '/images/sem-3.jpg',
+      alt: 'SEM of coating surface texture',
+    },
+  },
+  {
+    id: 'specimens',
+    label: 'The tray',
+    chapter: 'receipt',
+    layout: 'bleed',
+    kicker: '03 · The Receipt',
+    title: 'Thirty-five years in a tray',
+    body: 'Family collecting trips. Now part of the NHMLA research collection.',
+    image: {
+      src: '/images/specimen-group.jpg',
+      alt: 'Group of Aquarius Mountains garnet specimens',
+    },
   },
   {
     id: 'cn-ratio',
-    label: 'C to N ratio',
+    label: 'C:N',
     chapter: 'receipt',
     layout: 'hero',
     kicker: '03 · The Receipt',
     heroNum: '4.9 : 1',
-    body: 'The carbon-to-nitrogen ratio in the coating — squarely in the range living and dying microorganisms produce (4:1 to 6:1). Plant-derived oxalic acid alone carries no nitrogen at all; its ratio would be infinite.',
+    body: 'Not dead center — on the shoulder of the biological window near ~4.6 : 1. Close enough to matter. Maybe telling.',
     interactive: 'cn-ratio',
   },
   {
+    id: 'opal-host',
+    label: 'In the rock',
+    chapter: 'receipt',
+    layout: 'bleed',
+    kicker: '03 · The Receipt',
+    title: 'Still in the host',
+    body: 'Garnets seated where the vapor moved through.',
+    image: {
+      src: '/images/eddies-coated.jpg',
+      alt: 'Coated garnets seated in a fracture within porous host rock',
+    },
+  },
+  {
     id: 'hypothesis',
-    label: 'The hypothesis',
+    label: 'Hypothesis',
     chapter: 'receipt',
     layout: 'content',
     kicker: '03 · The Receipt',
     title: 'A biological reading',
     bullets: [
-      'Iron-oxidizing bacteria colonized the coated garnets, converting surface Fe²⁺ to Fe³⁺ and leaving hematite as the metabolic byproduct',
-      'The organic carbon layer above it is what remained of the bacteria themselves — biomass, fossilized in place',
-      "The coated population's crystal chemistry — elevated Cr, Sc, Zn substituting into the lattice — made its iron a more available electron donor",
-      "The uncoated population, with a cleaner lattice, didn't offer the same opportunity. The coating is the record of that selection",
+      'Iron-oxidizing microbes may have colonized the coated population — leaving hematite as a metabolic byproduct',
+      'The organic carbon above it: what remained of that biomass',
+      'Crystal chemistry (Cr, Sc, Zn) may have made one population’s iron a better electron donor',
+      'Still open: lipid biomarkers, cell-wall chemistry, or preserved DNA would close the case',
     ],
   },
-  {
-    id: 'cactus',
-    label: 'The cactus connection',
-    chapter: 'receipt',
-    layout: 'content',
-    kicker: '03 · The Receipt',
-    title: 'Where the organic matter might come from',
-    bullets: [
-      'Dying cacti release oxalic acid and other organics that migrate down into the soil and rock below — a documented Arizona pathway',
-      'Anthony Kampf, Curator Emeritus at NHMLA, has described over a dozen new mineral species formed this way at sites like the Rowley Mine',
-      'The Aquarius Mountains garnets may record a version of the same process — organic input meeting an iron-bearing surface already in biological territory',
-    ],
-  },
-  {
-    id: 'open-questions',
-    label: 'Open questions',
-    chapter: 'receipt',
-    layout: 'content',
-    kicker: '03 · The Receipt',
-    title: 'What would close the case',
-    bullets: [
-      'The sub-spherical morphology is consistent with bacteria, but also with other processes that produce rounded structures at this scale',
-      'The C:N ratio fits biology, but would also fit accumulated non-living organic material from a biological source',
-      "What's still missing: lipid biomarkers, intact cell-wall chemistry, or preserved DNA",
-    ],
-  },
+
+  // ── 04 What's Next ─────────────────────────────────────
   {
     id: 'next-divider',
     label: "What's Next",
@@ -506,11 +529,11 @@ export const slides: Slide[] = [
     kicker: 'Pocketful of Xtals',
     displayTitle: 'The Question\nIs Still Open',
     subtitle:
-      'Field verification of the mafic fluid source. Molecular tests for lipid biomarkers or preserved DNA. Read the full series — three posts, three instruments — at Pocketful of Xtals on Substack.',
+      'Field verification of the mafic fluid source. Molecular tests for biomarkers. The full series lives on Substack.',
     meta: 'aaroncelestian.substack.com',
     image: {
-      src: '/images/pyrite-vein.jpg',
-      alt: 'Porous volcanic rock with metallic crystals in a central vein',
+      src: '/images/garnet-vein.jpg',
+      alt: 'Metallic crystals in a vein through volcanic rock',
     },
   },
 ]

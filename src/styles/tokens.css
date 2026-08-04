@@ -33,8 +33,8 @@
   --space-10: 48px;
   --space-12: 64px;
 
-  --pad-x: clamp(24px, 5vw, 80px);
-  --pad-y: clamp(32px, 6vh, 72px);
+  --pad-x: clamp(28px, 5vw, 72px);
+  --pad-y: clamp(24px, 4.5vh, 52px);
 
   --radius: 0px;
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -50,8 +50,8 @@ html, body, #root {
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-body);
-  font-size: 16px;
-  line-height: 1.55;
+  font-size: 18px;
+  line-height: 1.5;
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
 }
@@ -64,9 +64,9 @@ h1, h2, h3, h4, h5, h6 {
   margin: 0 0 var(--space-2);
 }
 
-h1 { font-size: clamp(2.2rem, 5vw, 3.6rem); }
-h2 { font-size: clamp(1.6rem, 3.5vw, 2.4rem); }
-h3 { font-size: clamp(1.15rem, 2vw, 1.4rem); }
+h1 { font-size: clamp(2.4rem, 5.2vw, 3.8rem); }
+h2 { font-size: clamp(1.85rem, 3.8vw, 2.75rem); }
+h3 { font-size: clamp(1.25rem, 2.2vw, 1.55rem); }
 
 p { margin: 0 0 var(--space-3); }
 img { display: block; max-width: 100%; }
@@ -92,12 +92,12 @@ a {
 }
 
 .kicker {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--color-accent);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-3);
 }
 
 .btn {
@@ -109,12 +109,12 @@ a {
   text-decoration: none;
   font-family: var(--font-heading);
   font-weight: 600;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.2;
   color: var(--color-text);
   background: transparent;
   border: 1px solid var(--color-divider);
-  padding: 8px 14px;
+  padding: 9px 16px;
   border-radius: var(--radius);
   transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
 }
@@ -141,9 +141,9 @@ a {
 
 .tag {
   display: inline-block;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  padding: 3px 8px;
+  padding: 4px 9px;
   border: 1px solid var(--color-divider);
 }
 
@@ -167,15 +167,16 @@ a {
 .table th,
 .table td {
   text-align: left;
-  padding: 12px 16px 12px 0;
+  padding: 14px 18px 14px 0;
   border-bottom: 1px solid var(--color-divider);
   vertical-align: top;
+  font-size: 1.05rem;
 }
 
 .table th {
   font-family: var(--font-heading);
   font-weight: 600;
-  font-size: 13px;
+  font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: color-mix(in srgb, var(--color-text) 55%, transparent);
