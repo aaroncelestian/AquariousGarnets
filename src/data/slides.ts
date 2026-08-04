@@ -1,3 +1,5 @@
+import { asset } from '../lib/asset'
+
 export type LayoutKind =
   | 'cover'
   | 'divider'
@@ -40,6 +42,7 @@ export interface Slide {
   image?: { src: string; alt: string; fit?: 'cover' | 'contain' }
   figures?: { src: string; alt: string; caption?: string }[]
   slideshow?: { src: string; alt: string }[]
+  formula?: { expression: string; sites: { label: string; name: string }[] }
   meta?: string
   ghostNum?: string
   heroNum?: string
@@ -66,7 +69,7 @@ export const slides: Slide[] = [
       'Thirty-five years. One coating nobody had described. Three instruments. An open investigation.',
     meta: 'Aaron Celestian, PhD · Curator of Mineral Sciences, NHMLA',
     image: {
-      src: '/images/best-garnet.jpg',
+      src: asset('images/best-garnet.jpg'),
       alt: 'Metallic black garnet crystal in light matrix with a bright specular facet',
     },
     notes: 'Open on wonder — not on methodology.',
@@ -137,13 +140,13 @@ export const slides: Slide[] = [
     body: 'The garnets come from a distinct orange horizon — and from cavities where volcanic gases once escaped.',
     figures: [
       {
-        src: '/images/elephant-butte-face.jpg',
+        src: asset('images/elephant-butte-face.jpg'),
         alt: 'Elephant Butte face with orange garnet-producing layer',
         caption:
           'Elephant Butte. The garnet-producing layer is the orange rock. Walk the talus below it.',
       },
       {
-        src: '/images/elephant-butte-conduit.jpg',
+        src: asset('images/elephant-butte-conduit.jpg'),
         alt: 'Gas conduit textures in the rhyolite',
       },
     ],
@@ -157,7 +160,7 @@ export const slides: Slide[] = [
     title: 'Grown from steam',
     body: 'Vapor-phase crystallization — minerals growing directly from volcanic gas, no liquid step.',
     image: {
-      src: '/images/eddies-garnets.jpg',
+      src: asset('images/eddies-garnets.jpg'),
       alt: 'Rhyolite cavities with garnets in eddy pockets',
     },
   },
@@ -170,7 +173,7 @@ export const slides: Slide[] = [
     title: 'Black. Bright. Expected.',
     body: 'Perfect dodecahedra — known to collectors for decades.',
     image: {
-      src: '/images/garnet-in-matrix.jpg',
+      src: asset('images/garnet-in-matrix.jpg'),
       alt: 'Ordinary black mirror-bright garnet in matrix',
     },
   },
@@ -181,7 +184,14 @@ export const slides: Slide[] = [
     layout: 'stage',
     kicker: '01 · The Discovery',
     title: 'One framework. Three chemistries.',
-    body: 'Garnet crystallizes in cubic Ia‑3d. The pyralspite series shares that architecture — only the X-site cation changes. Drag anywhere to orbit.',
+    body: 'The pyralspite series shares the same cubic crystal architecture — only the X-site cation changes.',
+    formula: {
+      expression: 'X₃Y₂(SiO₄)₃',
+      sites: [
+        { label: 'X', name: 'dodecahedral site' },
+        { label: 'Y', name: 'octahedral site' },
+      ],
+    },
     cols: [
       {
         heading: 'Pyrope',
@@ -209,7 +219,7 @@ export const slides: Slide[] = [
     title: 'It shouldn’t reflect green',
     body: 'A cold, metallic green — like a beetle’s wing. I was fifteen. We had no framework for it.',
     image: {
-      src: '/images/coated-garnet.jpg',
+      src: asset('images/coated-garnet.jpg'),
       alt: 'Garnet with metallic iridescent green coating',
     },
   },
@@ -223,23 +233,23 @@ export const slides: Slide[] = [
     body: 'Same boulder, same habit, one coated, one not.',
     slideshow: [
       {
-        src: '/images/best-garnet.jpg',
+        src: asset('images/best-garnet.jpg'),
         alt: 'Dark metallic coated garnet in light matrix',
       },
       {
-        src: '/images/slideshow-opal.jpg',
+        src: asset('images/slideshow-opal.jpg'),
         alt: 'Garnet crystal seated in pale opaline host rock',
       },
       {
-        src: '/images/slideshow-macro-coat.jpg',
+        src: asset('images/slideshow-macro-coat.jpg'),
         alt: 'Close macro of metallic coating on garnet facets',
       },
       {
-        src: '/images/slideshow-garnet-2.jpg',
+        src: asset('images/slideshow-garnet-2.jpg'),
         alt: 'Garnet dodecahedron on tan porous matrix',
       },
       {
-        src: '/images/slideshow-garnet-3a.jpg',
+        src: asset('images/slideshow-garnet-3a.jpg'),
         alt: 'Garnet crystal on light matrix, soft focus background',
       },
     ],
@@ -253,7 +263,7 @@ export const slides: Slide[] = [
     title: 'A coating — not a new mineral',
     body: 'Worn edges peel away. Underneath: ordinary black garnet.',
     image: {
-      src: '/images/coating-worn.jpg',
+      src: asset('images/coating-worn.jpg'),
       alt: 'Green coating worn away revealing black garnet',
     },
   },
@@ -276,7 +286,7 @@ export const slides: Slide[] = [
     title: 'Something chose this garnet',
     body: 'The coating finds one population and leaves the other alone.',
     image: {
-      src: '/images/eddies-coated.jpg',
+      src: asset('images/eddies-coated.jpg'),
       alt: 'Coated garnets in rhyolite cavities',
     },
   },
@@ -329,7 +339,7 @@ export const slides: Slide[] = [
     title: 'Not how minerals grow',
     body: 'A branching front advancing across bare garnet — diffusion-limited. Film, not crust.',
     image: {
-      src: '/images/dendrite-1.jpg',
+      src: asset('images/dendrite-1.jpg'),
       alt: 'Optical micrograph of dendritic coating margin on garnet',
     },
     notes: 'Linger here. These are the hero images.',
@@ -343,7 +353,7 @@ export const slides: Slide[] = [
     title: 'The coating spreads',
     body: 'Rainbow shimmer = thin-film interference. Nanometers thick.',
     image: {
-      src: '/images/dendrite-2.jpg',
+      src: asset('images/dendrite-2.jpg'),
       alt: 'Optical micrograph showing iridescent dendritic coating',
     },
   },
@@ -356,11 +366,32 @@ export const slides: Slide[] = [
     title: 'It looks alive',
     body: 'The morphology of systems growing under diffusion limitation — or of a biofilm expanding across a surface.',
     image: {
-      src: '/images/dendrite-3.jpg',
+      src: asset('images/dendrite-3.jpg'),
       alt: 'Optical micrograph of dendritic spreading margin',
     },
   },
 
+  {
+    id: 'libs-intro',
+    label: 'LIBS',
+    chapter: 'receipt',
+    layout: 'split',
+    kicker: '03 · The Receipt',
+    title: 'A laser reads the surface',
+    body: 'LIBS ablates a microscopic pit — only a few micrometers deep — and the plasma flash reports a near-complete elemental suite in one shot.',
+    interactive: 'libs-blast',
+    notes: 'Fire the pulse once for the room. Emphasize surface + elements, not depth math.',
+  },
+  {
+    id: 'libs',
+    label: 'Delamination',
+    chapter: 'receipt',
+    layout: 'split',
+    kicker: '03 · The Receipt',
+    title: 'It peeled like plywood',
+    body: 'On this coating the pulse didn’t just vaporize — it delaminated. Carbon lifts, then hematite. Garnet stays.',
+    interactive: 'libs-peel',
+  },
   {
     id: 'raman',
     label: 'Raman',
@@ -368,15 +399,15 @@ export const slides: Slide[] = [
     layout: 'bleed',
     kicker: '03 · The Receipt',
     title: 'Raman: hematite, then carbon',
-    body: 'Iron oxide at the margin. Disordered organic carbon on top — thermally immature. Tap the spectrum to zoom.',
+    body: 'Those peeled layers, named. Iron oxide at the margin. Disordered organic carbon on top — thermally immature. Tap the spectrum to zoom.',
     image: {
-      src: '/images/raman-comparison.png',
+      src: asset('images/raman-comparison.png'),
       alt: 'Raman spectra comparing uncoated garnet and organic-rich coating',
       fit: 'contain',
     },
     interactive: 'raman-zoom',
     notes:
-      'Tap through: full spectrum → hematite (low cm⁻¹) → carbon D/G (high cm⁻¹) → zoom out.',
+      'Tap: full → hematite fingerprints → the ~1320 hitch (hematite 2nd-order / two-magnon, not carbon alone) → D+G confirms real organic C → out. Spot 1 mixes both; spots without hematite still carry D and G.',
   },
   {
     id: 'raman-bands',
@@ -402,27 +433,6 @@ export const slides: Slide[] = [
     notes: 'Park the slider near “Disordered carbon” — that’s the coating.',
   },
   {
-    id: 'libs-intro',
-    label: 'LIBS',
-    chapter: 'receipt',
-    layout: 'split',
-    kicker: '03 · The Receipt',
-    title: 'A laser reads the surface',
-    body: 'LIBS ablates a microscopic pit — only a few micrometers deep — and the plasma flash reports a near-complete elemental suite in one shot.',
-    interactive: 'libs-blast',
-    notes: 'Fire the pulse once for the room. Emphasize surface + elements, not depth math.',
-  },
-  {
-    id: 'libs',
-    label: 'Delamination',
-    chapter: 'receipt',
-    layout: 'split',
-    kicker: '03 · The Receipt',
-    title: 'It peeled like plywood',
-    body: 'On this coating the pulse didn’t just vaporize — it delaminated. Carbon lifts, then hematite. Garnet stays.',
-    interactive: 'libs-peel',
-  },
-  {
     id: 'sem-1',
     label: 'SEM I',
     chapter: 'receipt',
@@ -431,7 +441,7 @@ export const slides: Slide[] = [
     title: '7,500×',
     body: 'Packed, rounded structures — 0.5 to 2 μm. No flat crystal faces.',
     image: {
-      src: '/images/sem-1.jpg',
+      src: asset('images/sem-1.jpg'),
       alt: 'SEM of globular coating surface',
     },
     notes: 'Size matches coccoid bacteria. Let the image work.',
@@ -445,7 +455,7 @@ export const slides: Slide[] = [
     title: 'Not geometric',
     body: 'Minerals from solution grow angles. This doesn’t.',
     image: {
-      src: '/images/sem-2.jpg',
+      src: asset('images/sem-2.jpg'),
       alt: 'SEM close-up of coating globules',
     },
   },
@@ -457,7 +467,7 @@ export const slides: Slide[] = [
     kicker: '03 · The Receipt',
     title: 'The architecture of a film',
     image: {
-      src: '/images/sem-3.jpg',
+      src: asset('images/sem-3.jpg'),
       alt: 'SEM of coating surface texture',
     },
   },
@@ -470,7 +480,7 @@ export const slides: Slide[] = [
     title: 'Thirty-five years in a tray',
     body: 'Family collecting trips. Now part of the NHMLA research collection.',
     image: {
-      src: '/images/specimen-group.jpg',
+      src: asset('images/specimen-group.jpg'),
       alt: 'Group of Aquarius Mountains garnet specimens',
     },
   },
@@ -493,7 +503,7 @@ export const slides: Slide[] = [
     title: 'Still in the host',
     body: 'Garnets seated where the vapor moved through.',
     image: {
-      src: '/images/eddies-coated.jpg',
+      src: asset('images/eddies-coated.jpg'),
       alt: 'Coated garnets seated in a fracture within porous host rock',
     },
   },
@@ -532,7 +542,7 @@ export const slides: Slide[] = [
       'Field verification of the mafic fluid source. Molecular tests for biomarkers. The full series lives on Substack.',
     meta: 'aaroncelestian.substack.com',
     image: {
-      src: '/images/garnet-vein.jpg',
+      src: asset('images/garnet-vein.jpg'),
       alt: 'Metallic crystals in a vein through volcanic rock',
     },
   },

@@ -569,6 +569,38 @@
   max-width: 38ch;
 }
 
+.stageFormula {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: var(--space-1) 0 var(--space-2);
+}
+
+.stageFormulaExpr {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: clamp(1.55rem, 2.8vw, 2.1rem);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.stageFormulaExpr sub {
+  font-size: 0.55em;
+  font-weight: 700;
+}
+
+.stageSite {
+  color: var(--color-accent);
+}
+
+.stageFormulaSites {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: clamp(0.88rem, 1.15vw, 1rem);
+  color: color-mix(in srgb, var(--color-text) 68%, transparent);
+}
+
 .stageCols {
   display: flex;
   flex-direction: column;

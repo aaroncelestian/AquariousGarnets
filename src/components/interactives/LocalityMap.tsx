@@ -1,4 +1,5 @@
 import styles from './Interactives.module.css'
+import { asset } from '../../lib/asset'
 
 /**
  * Approach transect (park → garnet horizon), from Google Earth path stats.
@@ -64,7 +65,7 @@ export function LocalityMap({ active }: { active: boolean }) {
       <div className={styles.mapFrame}>
         <div className={styles.mapStage}>
           <img
-            src="/images/aquarius-aerial.jpg"
+            src={asset('images/aquarius-aerial.jpg')}
             alt="Aerial view of Elephant Butte in the Aquarius Mountains, with the orange garnet-producing layer in the rhyolite cliffs"
           />
 

@@ -181,6 +181,26 @@ export function SlideView({
           <Kicker text={slide.kicker} />
           {slide.title && <h2>{slide.title}</h2>}
           {slide.body && <p className={`${styles.body} text-muted`}>{slide.body}</p>}
+          {slide.formula && (
+            <div className={styles.stageFormula} aria-label={`Formula ${slide.formula.expression}`}>
+              <div className={styles.stageFormulaExpr}>
+                <span className={styles.stageSite}>X</span>
+                <sub>3</sub>
+                <span className={styles.stageSite}>Y</span>
+                <sub>2</sub>
+                (SiO<sub>4</sub>)<sub>3</sub>
+              </div>
+              <div className={styles.stageFormulaSites}>
+                {slide.formula.sites.map((s) => (
+                  <span key={s.label}>
+                    <span className={styles.stageSite}>{s.label}</span>
+                    {' — '}
+                    {s.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
           {slide.cols && (
             <div className={styles.stageCols}>
               {slide.cols.map((c) => (

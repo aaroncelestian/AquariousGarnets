@@ -227,29 +227,22 @@ export function LibsPeel({ active }: { active: boolean }) {
                   strokeWidth="1"
                   opacity="0.6"
                 />
-                <g
-                  className={styles.libsPlasma}
-                  data-fired={step === 2 ? 'true' : step > 2 ? 'settled' : undefined}
-                  transform="translate(290 150)"
-                >
-                  <circle r={step === 2 ? 36 : 14} fill="url(#lzFlash)" />
+                <g transform="translate(290 150)">
+                  <g
+                    className={styles.libsPlasma}
+                    data-fired={step === 2 ? 'true' : step > 2 ? 'settled' : undefined}
+                  >
+                    <circle r={step === 2 ? 36 : 14} fill="url(#lzFlash)" />
+                  </g>
                 </g>
               </g>
             </g>
           </g>
 
-          {/* Caption */}
-          <text
-            x="280"
-            y="322"
-            textAnchor="middle"
-            className={styles.label}
-            fontSize="14"
-          >
-            {STEPS[step].caption}
-          </text>
         </svg>
       </div>
+
+      <p className={styles.libsCaption}>{STEPS[step].caption}</p>
 
       <div className={styles.libsControls}>
         <button

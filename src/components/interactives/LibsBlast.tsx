@@ -3,19 +3,14 @@ import styles from './Interactives.module.css'
 
 const ELEMENTS = ['C', 'Fe', 'Mn', 'Si', 'Al', 'Ca', 'O', 'Mg', 'Cr', 'Zn']
 
+/** Impact on the coating top face (crystal group at translate(140 150)). */
+const IMPACT = { x: 270, y: 186 }
+
 export function LibsBlast({ active }: { active: boolean }) {
   const [fired, setFired] = useState(false)
-  const [pulse, setPulse] = useState(0)
 
   useEffect(() => {
-    if (!active) {
-      setFired(false)
-      setPulse(0)
-      return
-    }
-    // Soft idle pulse on the beam so the slide feels alive before firing
-    const id = window.setInterval(() => setPulse((p) => p + 1), 2200)
-    return () => window.clearInterval(id)
+    if (!active) setFired(false)
   }, [active])
 
   const fire = () => {
@@ -23,13 +18,6 @@ export function LibsBlast({ active }: { active: boolean }) {
     // retrigger CSS animations
     requestAnimationFrame(() => setFired(true))
   }
-
-  useEffect(() => {
-    if (active) {
-      const t = window.setTimeout(fire, 700)
-      return () => window.clearTimeout(t)
-    }
-  }, [active])
 
   return (
     <div className={styles.libsScene}>
@@ -39,7 +27,6 @@ export function LibsBlast({ active }: { active: boolean }) {
         role="img"
         aria-label="Laser-induced breakdown spectroscopy: a pulsed laser ablates the surface and reads a near-complete elemental suite from the plasma"
       >
-        {/* Stage / crystal block */}
         <defs>
           <linearGradient id="libsCrystal" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#3a3533" />
@@ -160,64 +147,63 @@ export function LibsBlast({ active }: { active: boolean }) {
           </text>
         </g>
 
-        {/* Beam */}
+        {/* Beam — only after fire */}
         <g
           className={styles.libsBeam}
-          data-idle={active && !fired ? String(pulse % 2) : undefined}
           data-fired={fired ? 'true' : undefined}
+          opacity={fired ? 1 : 0}
         >
           <line
             x1="420"
             y1="64"
-            x2="268"
-            y2="178"
+            x2={IMPACT.x}
+            y2={IMPACT.y}
             stroke="var(--color-accent)"
-            strokeWidth="2"
+            strokeWidth="2.5"
             strokeLinecap="round"
-            opacity="0.35"
+            opacity="0.9"
           />
           <line
             x1="420"
             y1="64"
-            x2="268"
-            y2="178"
+            x2={IMPACT.x}
+            y2={IMPACT.y}
             stroke="#fff"
             strokeWidth="1"
             strokeLinecap="round"
-            opacity="0.55"
+            opacity="0.7"
           />
         </g>
 
-        {/* Impact / plasma */}
-        <g
-          className={styles.libsPlasma}
-          data-fired={fired ? 'true' : undefined}
-          transform="translate(268 178)"
-          filter="url(#libsGlow)"
-        >
-          <circle r="28" fill="url(#libsPlasma)" />
-          <circle r="6" fill="#fff" opacity="0.95" />
-          {/* Ejecta streaks */}
-          {[
-            [-28, -22],
-            [-12, -34],
-            [8, -32],
-            [24, -18],
-            [-22, 6],
-            [26, 4],
-          ].map(([x, y], i) => (
-            <line
-              key={i}
-              className={styles.libsEjecta}
-              x1="0"
-              y1="0"
-              x2={x}
-              y2={y}
-              stroke="#ffd39a"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-          ))}
+        {/* Impact / plasma — outer SVG translate kept separate from CSS scale */}
+        <g transform={`translate(${IMPACT.x} ${IMPACT.y})`} filter="url(#libsGlow)">
+          <g
+            className={styles.libsPlasma}
+            data-fired={fired ? 'true' : undefined}
+          >
+            <circle r="22" fill="url(#libsPlasma)" />
+            <circle r="5" fill="#fff" opacity="0.95" />
+            {[
+              [-24, -18],
+              [-10, -28],
+              [8, -26],
+              [22, -14],
+              [-20, 8],
+              [22, 6],
+            ].map(([x, y], i) => (
+              <line
+                key={i}
+                className={styles.libsEjecta}
+                x1="0"
+                y1="0"
+                x2={x}
+                y2={y}
+                stroke="#ffd39a"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            ))}
+          </g>
         </g>
 
         {/* Flying element chips */}
@@ -226,8 +212,8 @@ export function LibsBlast({ active }: { active: boolean }) {
             const angle = -110 + i * 18
             const rad = (angle * Math.PI) / 180
             const dist = 70 + (i % 3) * 18
-            const x = 268 + Math.cos(rad) * dist
-            const y = 178 + Math.sin(rad) * dist * 0.75
+            const x = IMPACT.x + Math.cos(rad) * dist
+            const y = IMPACT.y + Math.sin(rad) * dist * 0.75
             return (
               <g key={el} transform={`translate(${x} ${y})`}>
                 <g

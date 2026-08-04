@@ -35,9 +35,9 @@
   margin: 0 auto;
 }
 
-.slide.bleed .slideInner,
-.slide.cover .slideInner,
-.slide.stage .slideInner {
+.slide:global(.bleed) .slideInner,
+.slide:global(.cover) .slideInner,
+.slide:global(.stage) .slideInner {
   max-width: none;
   padding: 0;
 }
