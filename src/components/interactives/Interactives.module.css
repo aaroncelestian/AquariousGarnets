@@ -587,8 +587,8 @@
 }
 
 .crystal[data-backdrop] .legend {
-  top: auto;
-  bottom: 48px;
+  top: var(--pad-y);
+  bottom: auto;
   right: var(--pad-x);
   padding: 8px 10px;
   background: color-mix(in srgb, var(--color-bg) 72%, transparent);
@@ -631,6 +631,13 @@
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.legendNote {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-text) 45%, transparent);
 }
 
 .swatch {

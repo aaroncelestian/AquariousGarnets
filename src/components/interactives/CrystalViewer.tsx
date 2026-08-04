@@ -164,13 +164,15 @@ export function CrystalViewer({
     >
       <div className={styles.legend}>
         <div className={styles.legendRow}>
-          <span className={styles.swatch} style={{ background: '#ec3013' }} /> Si
+          <span className={styles.swatch} style={{ background: '#3b6fa0' }} /> Si
         </div>
         <div className={styles.legendRow}>
-          <span className={styles.swatch} style={{ background: '#3b6fa0' }} /> Fe
+          <span className={styles.swatch} style={{ background: '#c4a35a' }} /> Fe
+          <span className={styles.legendNote}>Y</span>
         </div>
         <div className={styles.legendRow}>
-          <span className={styles.swatch} style={{ background: '#c4a35a' }} /> Ca
+          <span className={styles.swatch} style={{ background: '#ec3013' }} /> Ca
+          <span className={styles.legendNote}>X</span>
         </div>
         <div className={styles.legendRow}>
           <span className={styles.swatch} style={{ background: '#d7d3d3' }} /> O

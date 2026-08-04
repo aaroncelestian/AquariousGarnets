@@ -48,6 +48,73 @@ function Rise({
   )
 }
 
+/** Career path tree — levels animate from root (bottom) upward. */
+function CareerTree({
+  tree,
+  active,
+}: {
+  tree: NonNullable<Slide['tree']>
+  active: boolean
+}) {
+  const reduced = usePrefersReducedMotion()
+  const n = tree.length
+  const step = 0.16
+  const ease = [0.2, 0.8, 0.2, 1] as const
+
+  return (
+    <div className={styles.tree} aria-label="Career path" data-active={active || undefined}>
+      <motion.div
+        className={styles.treeTrunk}
+        aria-hidden
+        initial={reduced ? false : { scaleY: 0 }}
+        animate={active ? { scaleY: 1 } : { scaleY: 0 }}
+        transition={
+          reduced
+            ? { duration: 0 }
+            : { duration: n * step * 0.85, ease, delay: 0.05 }
+        }
+        style={{ transformOrigin: 'bottom center' }}
+      />
+      {tree.map((level, li) => {
+        // DOM order is top→bottom; reveal from root (last index) upward.
+        const fromRoot = n - 1 - li
+        const delay = reduced ? 0 : 0.08 + fromRoot * step
+        return (
+          <motion.div
+            key={li}
+            className={styles.treeLevel}
+            data-root={li === n - 1 ? 'true' : undefined}
+            data-count={level.length}
+            initial={reduced ? false : { opacity: 0, y: 18 }}
+            animate={active ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
+            transition={{ duration: 0.42, ease, delay }}
+          >
+            {level.length > 1 && <div className={styles.treeBranch} aria-hidden />}
+            <div className={styles.treeNodes}>
+              {level.map((node, ni) => (
+                <motion.div
+                  key={`${node.year}-${node.text}`}
+                  className={styles.treeNode}
+                  initial={reduced ? false : { opacity: 0, y: 10 }}
+                  animate={active ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+                  transition={{
+                    duration: 0.36,
+                    ease,
+                    delay: reduced ? 0 : delay + ni * 0.05,
+                  }}
+                >
+                  <span className={styles.treeYear}>{node.year}</span>
+                  <span className={styles.treeText}>{node.text}</span>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )
+      })}
+    </div>
+  )
+}
+
 function Kicker({ text }: { text?: string }) {
   if (!text) return null
   return <div className="kicker">{text}</div>
@@ -335,29 +402,7 @@ export function SlideView({
           </ol>
         )}
         {slide.tree && (
-          <div className={styles.tree} aria-label="Career path">
-            {slide.tree.map((level, li) => (
-              <div
-                key={li}
-                className={styles.treeLevel}
-                data-root={li === slide.tree!.length - 1 ? 'true' : undefined}
-                data-count={level.length}
-              >
-                {level.length > 1 && <div className={styles.treeBranch} aria-hidden />}
-                <div className={styles.treeNodes}>
-                  {level.map((node) => (
-                    <div
-                      key={`${node.year}-${node.text}`}
-                      className={styles.treeNode}
-                    >
-                      <span className={styles.treeYear}>{node.year}</span>
-                      <span className={styles.treeText}>{node.text}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+          <CareerTree tree={slide.tree} active={active} />
         )}
         {slide.table && (
           <div className={styles.tableWrap}>

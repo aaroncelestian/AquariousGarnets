@@ -352,20 +352,23 @@
   padding: 4px 0 8px;
 }
 
-.tree::before {
-  content: '';
+.treeTrunk {
   position: absolute;
   top: 14px;
   bottom: 22px;
-  left: 50%;
+  left: calc(50% - 1px);
   width: 2px;
-  transform: translateX(-50%);
   background: linear-gradient(
-    to bottom,
+    to top,
     color-mix(in srgb, var(--color-accent) 55%, transparent),
     color-mix(in srgb, var(--color-text) 22%, transparent)
   );
   z-index: 0;
+  pointer-events: none;
+}
+
+.tree::before {
+  content: none;
 }
 
 .treeLevel {

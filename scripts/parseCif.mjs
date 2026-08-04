@@ -146,9 +146,9 @@ for (let i = 0; i < positions.length; i++) {
 }
 
 const colors = {
-  Si: '#ec3013',
-  Fe: '#3b6fa0',
-  Ca: '#c4a35a',
+  Si: '#3b6fa0',
+  Fe: '#c4a35a',
+  Ca: '#ec3013',
   O: '#d7d3d3',
 }
 

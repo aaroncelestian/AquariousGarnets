@@ -1,17 +1,80 @@
+import { useCallback, useEffect, useState } from 'react'
 import { slides, CHAPTERS } from '../data/slides'
 import { useActiveSlide } from '../hooks/useActiveSlide'
 import { NavContext } from '../hooks/useSlideNav'
 import { SlideView } from './layouts/SlideView'
 import styles from './Shell.module.css'
 
+function getFullscreenElement() {
+  const doc = document as Document & {
+    webkitFullscreenElement?: Element | null
+  }
+  return document.fullscreenElement ?? doc.webkitFullscreenElement ?? null
+}
+
+async function enterFullscreen() {
+  const el = document.documentElement as HTMLElement & {
+    webkitRequestFullscreen?: () => Promise<void> | void
+  }
+  if (el.requestFullscreen) await el.requestFullscreen()
+  else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen()
+}
+
+async function exitFullscreen() {
+  const doc = document as Document & {
+    webkitExitFullscreen?: () => Promise<void> | void
+  }
+  if (document.exitFullscreen) await document.exitFullscreen()
+  else if (doc.webkitExitFullscreen) await doc.webkitExitFullscreen()
+}
+
 export function Shell() {
   const { containerRef, activeIndex, goTo } = useActiveSlide(slides.length)
   const activeChapter = slides[activeIndex]?.chapter
+  const [fullscreen, setFullscreen] = useState(false)
 
   const chapterStarts = CHAPTERS.map((ch) => ({
     ...ch,
     index: slides.findIndex((s) => s.chapter === ch.id && s.layout === 'divider'),
   }))
+
+  useEffect(() => {
+    const sync = () => setFullscreen(Boolean(getFullscreenElement()))
+    sync()
+    document.addEventListener('fullscreenchange', sync)
+    document.addEventListener('webkitfullscreenchange', sync)
+    return () => {
+      document.removeEventListener('fullscreenchange', sync)
+      document.removeEventListener('webkitfullscreenchange', sync)
+    }
+  }, [])
+
+  const toggleFullscreen = useCallback(async () => {
+    try {
+      if (getFullscreenElement()) await exitFullscreen()
+      else await enterFullscreen()
+    } catch {
+      // User gesture / browser policy can reject — leave UI unchanged.
+    }
+  }, [])
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'f' && e.key !== 'F') return
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      const tag = (e.target as HTMLElement)?.tagName
+      const editable =
+        tag === 'INPUT' ||
+        tag === 'TEXTAREA' ||
+        tag === 'SELECT' ||
+        (e.target as HTMLElement)?.isContentEditable
+      if (editable) return
+      e.preventDefault()
+      void toggleFullscreen()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [toggleFullscreen])
 
   return (
     <NavContext.Provider value={goTo}>
@@ -59,10 +122,21 @@ export function Shell() {
         ))}
       </nav>
 
-      <div className={styles.counter} aria-live="polite">
-        {activeIndex + 1} / {slides.length}
+      <div className={styles.chrome}>
+        <div className={styles.counter} aria-live="polite">
+          {activeIndex + 1} / {slides.length}
+        </div>
+        <button
+          type="button"
+          className={styles.fullscreenBtn}
+          onClick={() => void toggleFullscreen()}
+          aria-pressed={fullscreen}
+          aria-label={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+          title={fullscreen ? 'Exit fullscreen (F)' : 'Fullscreen (F)'}
+        >
+          {fullscreen ? 'Exit full screen' : 'Full screen'}
+        </button>
       </div>
     </NavContext.Provider>
   )
 }
-
