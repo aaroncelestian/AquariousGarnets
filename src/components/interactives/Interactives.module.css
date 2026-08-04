@@ -579,9 +579,9 @@
   border: none;
   background:
     radial-gradient(
-      ellipse 55% 50% at 68% 48%,
-      color-mix(in srgb, var(--color-accent) 7%, transparent),
-      transparent 70%
+      ellipse 60% 55% at 50% 48%,
+      color-mix(in srgb, var(--color-accent) 6%, transparent),
+      transparent 72%
     ),
     var(--color-bg);
 }
@@ -595,12 +595,13 @@
 }
 
 .crystal[data-backdrop] .crystalCaption {
-  left: auto;
-  right: var(--pad-x);
+  left: 50%;
+  right: auto;
   bottom: 14px;
-  text-align: right;
-  max-width: 42ch;
-  padding: 4px 8px;
+  transform: translateX(-50%);
+  text-align: center;
+  max-width: 48ch;
+  padding: 4px 10px;
   background: color-mix(in srgb, var(--color-bg) 72%, transparent);
 }
 

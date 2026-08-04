@@ -80,8 +80,8 @@ function Scene({
 }) {
   const group = useRef<THREE.Group>(null)
   const reduced = usePrefersReducedMotion()
-  const edges = useDodecahedronEdges(backdrop ? 4.8 : 4.2)
-  const scale = backdrop ? 0.48 : 0.42
+  const edges = useDodecahedronEdges(backdrop ? 5.4 : 4.2)
+  const scale = backdrop ? 0.52 : 0.42
 
   useFrame((_, dt) => {
     if (!group.current || reduced || !active) return
@@ -96,17 +96,17 @@ function Scene({
       <ambientLight intensity={0.65} />
       <directionalLight position={[6, 8, 4]} intensity={1.1} />
       <directionalLight position={[-4, -2, -6]} intensity={0.35} />
-      {/* Bias right so copy can sit on the left without covering the habit */}
-      <group ref={group} position={backdrop ? [2.35, 0.1, 0] : [0, 0, 0]}>
+      {/* Centered behind copy — habit reads as atmosphere */}
+      <group ref={group} position={backdrop ? [0, 0.15, -0.4] : [0, 0, 0]}>
         {/* Habit wireframe */}
         {edges.map((pair, i) => (
           <Line
             key={i}
             points={pair}
             color="#ec3013"
-            lineWidth={backdrop ? 1.35 : 1.2}
+            lineWidth={backdrop ? 1.15 : 1.2}
             transparent
-            opacity={backdrop ? 0.62 : 0.55}
+            opacity={backdrop ? 0.38 : 0.55}
           />
         ))}
 
@@ -144,7 +144,7 @@ function Scene({
         enableZoom={false}
         autoRotate={false}
         makeDefault
-        target={backdrop ? [2.35, 0.1, 0] : [0, 0, 0]}
+        target={backdrop ? [0, 0.15, -0.4] : [0, 0, 0]}
       />
     </>
   )
@@ -181,8 +181,8 @@ export function CrystalViewer({
       <Canvas
         dpr={[1, 1.75]}
         camera={{
-          position: backdrop ? [0.4, 1.35, 10.5] : [0, 1.2, 9.5],
-          fov: backdrop ? 38 : 40,
+          position: backdrop ? [0, 1.1, 11.2] : [0, 1.2, 9.5],
+          fov: backdrop ? 36 : 40,
         }}
         gl={{ antialias: true, alpha: true }}
         style={{ width: '100%', height: '100%' }}

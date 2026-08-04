@@ -144,8 +144,9 @@ export function LibsPeel({ active }: { active: boolean }) {
                 />
                 <text
                   x="170"
-                  y="165"
+                  y="138"
                   textAnchor="middle"
+                  dominantBaseline="middle"
                   fontSize="15"
                   fill="#f3f2f2"
                   opacity="0.85"
@@ -206,8 +207,8 @@ export function LibsPeel({ active }: { active: boolean }) {
                 />
               </g>
 
-              {/* Laser + blast at surface */}
-              <g opacity={step >= 2 ? 1 : 0}>
+              {/* Laser + blast — only on the blast step, not during peel */}
+              <g opacity={step === 2 ? 1 : 0} style={{ pointerEvents: 'none' }}>
                 <line
                   x1="420"
                   y1="40"
@@ -230,9 +231,9 @@ export function LibsPeel({ active }: { active: boolean }) {
                 <g transform="translate(290 150)">
                   <g
                     className={styles.libsPlasma}
-                    data-fired={step === 2 ? 'true' : step > 2 ? 'settled' : undefined}
+                    data-fired={step === 2 ? 'true' : undefined}
                   >
-                    <circle r={step === 2 ? 36 : 14} fill="url(#lzFlash)" />
+                    <circle r={36} fill="url(#lzFlash)" />
                   </g>
                 </g>
               </g>

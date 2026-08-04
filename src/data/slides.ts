@@ -219,7 +219,7 @@ export const slides: Slide[] = [
     title: 'It shouldn’t reflect green',
     body: 'A cold, metallic green — like a beetle’s wing. I was fifteen. We had no framework for it.',
     image: {
-      src: asset('images/coated-garnet.jpg'),
+      src: asset('images/garnet-macro-coat.jpg'),
       alt: 'Garnet with metallic iridescent green coating',
     },
   },
@@ -263,7 +263,7 @@ export const slides: Slide[] = [
     title: 'A coating — not a new mineral',
     body: 'Worn edges peel away. Underneath: ordinary black garnet.',
     image: {
-      src: asset('images/coating-worn.jpg'),
+      src: asset('images/coating-worn-edge.jpg'),
       alt: 'Green coating worn away revealing black garnet',
     },
   },
@@ -366,7 +366,7 @@ export const slides: Slide[] = [
     title: 'It looks alive',
     body: 'The morphology of systems growing under diffusion limitation — or of a biofilm expanding across a surface.',
     image: {
-      src: asset('images/dendrite-3.jpg'),
+      src: asset('images/dendrite-margin.jpg'),
       alt: 'Optical micrograph of dendritic spreading margin',
     },
   },
