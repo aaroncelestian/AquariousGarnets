@@ -26,8 +26,11 @@ const LOW_WN = { scale: 2.45, origin: '22% 42%' } as const
 const FE_WN = { scale: 2.55, origin: '71% 38%' } as const
 const CARBON_WN = { scale: 2.35, origin: '84% 36%' } as const
 
-const EASE_ZOOM = 'transform 1.25s cubic-bezier(0.22, 1, 0.36, 1)'
-const EASE_PAN = 'transform 1.65s cubic-bezier(0.22, 1, 0.36, 1)'
+/** Camera moves must animate origin as well as scale — origin-only jumps feel like a snap. */
+const CAMERA_EASE = 'cubic-bezier(0.4, 0.05, 0.15, 1)'
+const EASE_ZOOM = `transform 1.55s ${CAMERA_EASE}, transform-origin 1.55s ${CAMERA_EASE}`
+const EASE_PAN = `transform 2.7s ${CAMERA_EASE}, transform-origin 2.7s ${CAMERA_EASE}`
+const EASE_OUT = `transform 2.2s ${CAMERA_EASE}, transform-origin 2.2s ${CAMERA_EASE}`
 
 const STEPS = [
   {
@@ -37,7 +40,7 @@ const STEPS = [
     cta: 'Tap to zoom → low wavenumber',
     scale: 1,
     origin: '50% 48%',
-    transition: EASE_ZOOM,
+    transition: EASE_OUT,
     showGarnet: false,
     showHematite: false,
     showFe: false,
@@ -73,7 +76,7 @@ const STEPS = [
     caption: 'Orange line — sharp first-order hematite peaks at the coating margin.',
     cta: 'Tap → pan to the Fe hitch',
     ...LOW_WN,
-    transition: EASE_ZOOM,
+    transition: EASE_PAN,
     showGarnet: true,
     showHematite: true,
     showFe: false,
@@ -124,8 +127,6 @@ export function RamanZoom({ active }: { active: boolean }) {
   const reduced = usePrefersReducedMotion()
   const view = STEPS[step]
   const zoomed = view.id !== 'full'
-  const tracing =
-    view.showGarnet || view.showHematite || view.showFe || view.showOrganic
 
   useEffect(() => {
     if (active) setStep(0)
@@ -137,8 +138,8 @@ export function RamanZoom({ active }: { active: boolean }) {
   return (
     <div
       className={styles.ramanZoom}
+      data-raman-zoom=""
       data-raman-zoomed={zoomed || undefined}
-      data-raman-tracing={tracing || undefined}
     >
       <div
         className={styles.ramanZoomViewport}
@@ -153,7 +154,6 @@ export function RamanZoom({ active }: { active: boolean }) {
         />
         <div
           className={styles.ramanZoomStage}
-          data-dim={tracing || undefined}
           style={{
             transform: `scale(${view.scale})`,
             transformOrigin: view.origin,
@@ -166,7 +166,6 @@ export function RamanZoom({ active }: { active: boolean }) {
             className={styles.ramanZoomImg}
             draggable={false}
           />
-          <div className={styles.ramanZoomDim} aria-hidden />
           <svg
             className={styles.ramanZoomOverlay}
             viewBox="0 0 1000 1000"
@@ -199,12 +198,18 @@ export function RamanZoom({ active }: { active: boolean }) {
             />
           </svg>
           {view.showGarnet && (
-            <span className={styles.ramanTraceTag} style={{ left: '28%', top: '74%' }}>
+            <span
+              className={`${styles.ramanTraceTag} ${styles.ramanTraceTagBare} ${styles.ramanTraceTagBelow}`}
+              style={{ left: '32%', top: '84%' }}
+            >
               Garnet
             </span>
           )}
           {view.showHematite && (
-            <span className={styles.ramanTraceTag} style={{ left: '20%', top: '48%' }}>
+            <span
+              className={`${styles.ramanTraceTag} ${styles.ramanTraceTagBare}`}
+              style={{ left: '20%', top: '48%' }}
+            >
               Hematite
             </span>
           )}

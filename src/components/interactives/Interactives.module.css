@@ -1098,15 +1098,19 @@
   flex: 1 1 auto;
   min-height: 0;
   margin: 0;
-  padding: clamp(48px, 7vh, 80px) clamp(16px, 2.5vw, 40px)
-    clamp(96px, 14vh, 148px);
+  padding: clamp(36px, 5vh, 64px) clamp(20px, 3vw, 48px)
+    clamp(188px, 26vh, 268px);
   border: none;
   background: transparent;
-  overflow: hidden;
+  overflow: visible;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   -webkit-tap-highlight-color: transparent;
+}
+
+.ramanZoom[data-raman-zoomed] .ramanZoomViewport {
+  overflow: hidden;
 }
 
 .ramanZoomHit {
@@ -1122,11 +1126,12 @@
 
 .ramanZoomStage {
   position: relative;
-  display: block;
-  width: auto;
-  height: auto;
-  max-width: 100%;
-  max-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
   will-change: transform;
 }
 
@@ -1135,28 +1140,11 @@
   width: auto;
   height: auto;
   max-width: 100%;
-  max-height: min(100%, 72vh);
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
   pointer-events: none;
   user-select: none;
-  transition: filter 0.55s ease, opacity 0.55s ease;
-}
-
-.ramanZoomStage[data-dim] .ramanZoomImg {
-  opacity: 0.38;
-  filter: grayscale(0.25) blur(0.4px);
-}
-
-.ramanZoomDim {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0;
-  background: color-mix(in srgb, var(--color-bg) 42%, transparent);
-  transition: opacity 0.55s ease;
-}
-
-.ramanZoomStage[data-dim] .ramanZoomDim {
-  opacity: 1;
 }
 
 .ramanZoomOverlay {
@@ -1206,6 +1194,15 @@
   animation: ramanTraceLabelIn 0.4s ease 0.5s forwards;
   color: #2a2a2a;
   background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+}
+
+.ramanTraceTagBare {
+  background: transparent;
+  padding: 0;
+}
+
+.ramanTraceTagBelow {
+  transform: translate(-50%, 12%);
 }
 
 @keyframes ramanTraceDraw {
@@ -1321,9 +1318,6 @@
   .ramanTraceTag {
     animation: none !important;
     opacity: 1;
-  }
-  .ramanZoomStage[data-dim] .ramanZoomImg {
-    filter: none;
   }
   .barCoated,
   .barUncoated { transition: none; }

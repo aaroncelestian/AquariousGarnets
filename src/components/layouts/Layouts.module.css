@@ -805,6 +805,15 @@
   z-index: 2;
 }
 
+:global(section):has([data-raman-zoom]) .bleedScrim {
+  background:
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-bg) 55%, transparent),
+      transparent 16%
+    );
+}
+
 :global(section):has([data-raman-zoomed]) .bleedCopy,
 :global(section):has([data-raman-zoomed]) .bleedKicker {
   opacity: 0;
