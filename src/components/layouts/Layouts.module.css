@@ -220,6 +220,10 @@
   color: color-mix(in srgb, var(--color-text) 60%, transparent);
 }
 
+:global(section[data-slide-id='close']) .meta {
+  bottom: calc(var(--pad-y) + 10vh);
+}
+
 .divider {
   flex: 1;
   display: flex;
