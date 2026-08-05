@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import styles from './Interactives.module.css'
 
-/** EDS atomic C:N of the coating sits just above the ~4.6 microbial center. */
+/** EDS atomic C:N of the coating sits in the ~4–5 microbial / fresh-residue band. */
 const COATING = 4.9
-const BIO_CENTER = 4.6
+const BIO_CENTER = 4.5
 const BIO_LO = 4.0
-const BIO_HI = 5.2
+const BIO_HI = 5.0
 const MAX_VAL = 10
 const VIEW_W = 760
 const X0 = 40
@@ -40,7 +40,7 @@ export function CnRatio({ active }: { active: boolean }) {
         className={styles.chart}
         viewBox={`0 0 ${VIEW_W} 150`}
         role="img"
-        aria-label={`Number line: coating carbon to nitrogen ratio ${COATING} to 1, near the biological center of about ${BIO_CENTER} to 1`}
+        aria-label={`Number line: coating carbon to nitrogen ratio ${COATING} to 1, inside the microbial and fresh-residue range of about 4 to 5 to 1`}
       >
         <line x1={X0} y1="88" x2={X1} y2="88" className={styles.axis} />
 
@@ -68,7 +68,7 @@ export function CnRatio({ active }: { active: boolean }) {
           className={styles.label}
           fontSize="12"
         >
-          biological · ~{BIO_CENTER} : 1
+          microbes / fresh residue · 4–5 : 1
         </text>
 
         <g
@@ -133,7 +133,7 @@ export function CnRatio({ active }: { active: boolean }) {
           fill="currentColor"
           opacity="0.5"
         >
-          oxalic acid alone: no N
+          aged organics → higher C:N
         </text>
       </svg>
     </figure>

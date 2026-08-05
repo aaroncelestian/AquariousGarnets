@@ -15,11 +15,14 @@ export type InteractiveKind =
   | 'xrf-chart'
   | 'libs-blast'
   | 'libs-peel'
+  | 'libs-stack-3d'
   | 'cn-ratio'
   | 'crystal-viewer'
   | 'raman-bands'
   | 'raman-maturity'
   | 'raman-zoom'
+  | 'eddy-field'
+  | 'eddy-photo'
 
 export type ChapterId = 'intro' | 'discovery' | 'chemistry' | 'receipt' | 'next'
 
@@ -47,6 +50,10 @@ export interface Slide {
   ghostNum?: string
   heroNum?: string
   interactive?: InteractiveKind
+  /** Split layout: put the figure/interactive in the wider left column. */
+  splitFlip?: boolean
+  /** Bleed copy tone — photo = editorial caption under a contain image. */
+  bleedTone?: 'photo'
   notes?: string
 }
 
@@ -128,7 +135,7 @@ export const slides: Slide[] = [
     title: 'The Aquarius Mountains',
     body: 'Mohave County, Arizona — where the Colorado Plateau gives way to the Basin and Range. Miocene rhyolite, 24 to 20 million years old.',
     interactive: 'locality-map',
-    notes: 'Point out park → climb → garnet horizon. Emphasize the terrain.',
+    notes: 'Point out park → climb → garnet horizon → cliff (~200 ft past) → sloping plateau.',
   },
   {
     id: 'orange-layer',
@@ -285,10 +292,9 @@ export const slides: Slide[] = [
     kicker: '02 · Reading the Chemistry',
     title: 'Something chose this garnet',
     body: 'The coating finds one population and leaves the other alone.',
-    image: {
-      src: asset('images/eddies-coated.jpg'),
-      alt: 'Coated garnets in rhyolite cavities',
-    },
+    interactive: 'eddy-photo',
+    notes:
+      'Vector field swims the garnet channel, then spirals into the round pocks — vapor eddies written in the rock.',
   },
   {
     id: 'xrf-chart',
@@ -372,34 +378,13 @@ export const slides: Slide[] = [
   },
 
   {
-    id: 'libs-intro',
-    label: 'LIBS',
-    chapter: 'receipt',
-    layout: 'split',
-    kicker: '03 · The Receipt',
-    title: 'A laser reads the surface',
-    body: 'LIBS ablates a microscopic pit — only a few micrometers deep — and the plasma flash reports a near-complete elemental suite in one shot.',
-    interactive: 'libs-blast',
-    notes: 'Fire the pulse once for the room. Emphasize surface + elements, not depth math.',
-  },
-  {
-    id: 'libs',
-    label: 'Delamination',
-    chapter: 'receipt',
-    layout: 'split',
-    kicker: '03 · The Receipt',
-    title: 'It peeled like plywood',
-    body: 'On this coating the pulse didn’t just vaporize — it delaminated. Carbon lifts, then hematite. Garnet stays.',
-    interactive: 'libs-peel',
-  },
-  {
     id: 'raman',
     label: 'Raman',
     chapter: 'receipt',
     layout: 'bleed',
     kicker: '03 · The Receipt',
     title: 'Raman: hematite, then carbon',
-    body: 'Those peeled layers, named. Iron oxide at the margin. Disordered organic carbon on top — thermally immature. Tap the spectrum to zoom.',
+    body: 'Iron oxide at the margin. Disordered organic carbon on top — thermally immature. Tap the spectrum to zoom.',
     image: {
       src: asset('images/raman-comparison.png'),
       alt: 'Raman spectra comparing uncoated garnet and organic-rich coating',
@@ -407,7 +392,7 @@ export const slides: Slide[] = [
     },
     interactive: 'raman-zoom',
     notes:
-      'Tap: full → hematite fingerprints → the ~1320 hitch (hematite 2nd-order / two-magnon, not carbon alone) → D+G confirms real organic C → out. Spot 1 mixes both; spots without hematite still carry D and G.',
+      'Tap: full → zoom low cm⁻¹ → garnet outline → hematite outline → easy pan to Fe ~1320 hitch → pan to organics → outline top gold D/G → out.',
   },
   {
     id: 'raman-bands',
@@ -430,7 +415,46 @@ export const slides: Slide[] = [
     title: 'Carbon remembers heat',
     body: 'Fresh organic matter fluoresces. Heat orders the lattice — broad D and G bands appear, then sharpen toward graphite. A visual aid, not a calculation.',
     interactive: 'raman-maturity',
-    notes: 'Park the slider near “Disordered carbon” — that’s the coating.',
+    notes: 'Park the slider near “Broad D·G” — that’s the coating.',
+  },
+  {
+    id: 'libs-intro',
+    label: 'LIBS',
+    chapter: 'receipt',
+    layout: 'split',
+    kicker: '03 · The Receipt',
+    title: 'A laser reads the surface',
+    body: 'LIBS ablates a microscopic pit — only a few micrometers deep — and the plasma flash reports a near-complete elemental suite in one shot.',
+    interactive: 'libs-blast',
+    notes: 'Fire the pulse once for the room. Emphasize surface + elements, not depth math.',
+  },
+  {
+    id: 'libs',
+    label: 'Delamination',
+    chapter: 'receipt',
+    layout: 'split',
+    kicker: '03 · The Receipt',
+    title: 'It peeled like plywood',
+    body: 'On this coating the pulse didn’t just vaporize — it delaminated. Carbon lifts, then hematite. Garnet stays.',
+    interactive: 'libs-stack-3d',
+    splitFlip: true,
+  },
+  {
+    id: 'libs-craters',
+    label: 'Craters',
+    chapter: 'receipt',
+    layout: 'bleed',
+    bleedTone: 'photo',
+    kicker: '03 · The Receipt',
+    title: 'The craters\nkeep the receipt',
+    body: 'LIBS pits on one face. Thin coating → interference colors. Gone coating → bare garnet. Thickness, written in light.',
+    image: {
+      src: asset('images/libs-craters.jpg'),
+      alt: 'Macro of LIBS ablation craters on a coated garnet face with interference colors',
+      fit: 'contain',
+    },
+    notes:
+      'Point out concentric rings in the large pit, then the iridescent halos as thickness gradients. Ties the 3D peel to a real specimen.',
   },
   {
     id: 'sem-1',
@@ -438,13 +462,13 @@ export const slides: Slide[] = [
     chapter: 'receipt',
     layout: 'bleed',
     kicker: '03 · The Receipt',
-    title: '7,500×',
-    body: 'Packed, rounded structures — 0.5 to 2 μm. No flat crystal faces.',
+    title: '270×',
+    body: 'The architecture of a film — continuous coating, not scattered crystals.',
     image: {
       src: asset('images/sem-1.jpg'),
       alt: 'SEM of globular coating surface',
     },
-    notes: 'Size matches coccoid bacteria. Let the image work.',
+    notes: 'Wide field. Set up the morphology before zooming in.',
   },
   {
     id: 'sem-2',
@@ -452,7 +476,7 @@ export const slides: Slide[] = [
     chapter: 'receipt',
     layout: 'bleed',
     kicker: '03 · The Receipt',
-    title: 'Not geometric',
+    title: '2,500×',
     body: 'Minerals from solution grow angles. This doesn’t.',
     image: {
       src: asset('images/sem-2.jpg'),
@@ -465,11 +489,13 @@ export const slides: Slide[] = [
     chapter: 'receipt',
     layout: 'bleed',
     kicker: '03 · The Receipt',
-    title: 'The architecture of a film',
+    title: '7,500×',
+    body: 'Packed, rounded structures — 0.5 to 2 μm. No flat crystal faces.',
     image: {
       src: asset('images/sem-3.jpg'),
       alt: 'SEM of coating surface texture',
     },
+    notes: 'Size matches coccoid bacteria. Let the image work.',
   },
   {
     id: 'specimens',
@@ -491,8 +517,10 @@ export const slides: Slide[] = [
     layout: 'hero',
     kicker: '03 · The Receipt',
     heroNum: '4.9 : 1',
-    body: 'Not dead center — on the shoulder of the biological window near ~4.6 : 1. Close enough to matter. Maybe telling.',
+    body: 'Living microbes sit around 4–5 : 1. Fresh microbial leftovers can too. Aged biomass usually climbs higher as nitrogen is lost. The coating hasn’t.',
     interactive: 'cn-ratio',
+    notes:
+      'EDS atomic C:N. Band is microbial biomass / still-N-rich residue (~4–5). Degraded organics trend toward much higher C:N.',
   },
   {
     id: 'opal-host',

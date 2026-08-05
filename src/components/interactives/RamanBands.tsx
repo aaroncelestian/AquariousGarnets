@@ -1,5 +1,8 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { Canvas, useFrame } from '@react-three/fiber'
+import * as THREE from 'three'
 import styles from './Interactives.module.css'
+import { usePrefersReducedMotion } from '../../hooks/useActiveSlide'
 
 type Band = 'g' | 'd' | 'both'
 
@@ -9,117 +12,115 @@ const CAPTIONS: Record<Band, string> = {
   both: 'Strong D over G → disordered, thermally immature organic carbon',
 }
 
-/** Flat-top hexagon vertices, radius R, centered at origin. */
-function hexVertices(R: number) {
+function hexVerts(R: number) {
   return Array.from({ length: 6 }, (_, i) => {
     const a = (Math.PI / 180) * (30 + i * 60)
-    return { x: R * Math.cos(a), y: R * Math.sin(a) }
+    return new THREE.Vector3(R * Math.cos(a), R * Math.sin(a), 0)
   })
 }
 
-const R = 54
-const VERTS = hexVertices(R)
+const Y_UP = new THREE.Vector3(0, 1, 0)
 
-function Ring({
-  cx,
-  cy,
-  mode,
-  active,
-}: {
-  cx: number
-  cy: number
-  mode: Band
-  active: boolean
-}) {
-  const play = active && mode !== 'both' ? mode : active && mode === 'both' ? 'both' : 'off'
-  const path = VERTS.map((v, i) => `${i === 0 ? 'M' : 'L'} ${v.x} ${v.y}`).join(' ') + ' Z'
+function AromaticRing3D({ mode, active }: { mode: Band; active: boolean }) {
+  const reduced = usePrefersReducedMotion()
+  const atoms = useRef<THREE.Group>(null)
+  const bonds = useRef<THREE.Group>(null)
+  const root = useRef<THREE.Group>(null)
+  const base = useMemo(() => hexVerts(0.95), [])
+  const scratch = useMemo(() => base.map((v) => v.clone()), [base])
+  const mid = useMemo(() => new THREE.Vector3(), [])
+  const dir = useMemo(() => new THREE.Vector3(), [])
+  const quat = useMemo(() => new THREE.Quaternion(), [])
+  const restLen = useMemo(() => {
+    const a = base[0]
+    const b = base[1]
+    return a.distanceTo(b)
+  }, [base])
+
+  useFrame(({ clock }) => {
+    if (!atoms.current || !active) return
+    const t = reduced ? 0 : clock.elapsedTime
+    const gAmt = mode === 'g' || mode === 'both' ? Math.sin(t * 9) * 0.1 : 0
+    const dAmt = mode === 'd' || mode === 'both' ? Math.sin(t * 7) * 0.13 : 0
+    atoms.current.children.forEach((child, i) => {
+      const b = base[i]
+      const sign = i % 2 === 0 ? 1 : -1
+      scratch[i].set(
+        b.x + sign * gAmt + (b.x / 0.95) * dAmt,
+        b.y + sign * gAmt * 0.25 + (b.y / 0.95) * dAmt,
+        b.z,
+      )
+      child.position.copy(scratch[i])
+    })
+
+    if (bonds.current) {
+      bonds.current.children.forEach((child, i) => {
+        const a = scratch[i]
+        const b = scratch[(i + 1) % 6]
+        mid.copy(a).add(b).multiplyScalar(0.5)
+        dir.copy(b).sub(a)
+        const len = dir.length()
+        quat.setFromUnitVectors(Y_UP, dir.normalize())
+        child.position.copy(mid)
+        child.quaternion.copy(quat)
+        child.scale.set(1, len / restLen, 1)
+      })
+    }
+
+    if (root.current) {
+      root.current.rotation.y = reduced ? 0.15 : 0.2 + Math.sin(t * 0.35) * 0.28
+      root.current.rotation.x = reduced ? 0.12 : 0.18
+    }
+  })
 
   return (
-    <g transform={`translate(${cx} ${cy})`} data-vib={play}>
-      <path d={path} className={styles.ramanBond} />
-      {VERTS.map((v, i) => {
-        // G (E₂g-like): two sublattices slide against each other → C═C stretch
-        const sign = i % 2 === 0 ? 1 : -1
-        return (
-          <g key={i} transform={`translate(${v.x} ${v.y})`}>
-            <g
-              className={styles.ramanAtom}
-              style={
-                {
-                  '--ox': `${(v.x / R) * 10}px`,
-                  '--oy': `${(v.y / R) * 10}px`,
-                  '--gx': `${sign * 8}px`,
-                  '--gy': `${sign * 2}px`,
-                } as CSSProperties
-              }
-            >
-              <circle r="9" className={styles.ramanCarbon} />
-              <text y="3.5" textAnchor="middle" className={styles.ramanCLabel}>
-                C
-              </text>
-            </g>
-          </g>
-        )
-      })}
-      {/* Motion cues */}
-      {play === 'g' || play === 'both' ? (
-        <g className={styles.ramanCue} aria-hidden>
-          {VERTS.map((v, i) => {
-            const n = VERTS[(i + 1) % 6]
-            const mx = (v.x + n.x) / 2
-            const my = (v.y + n.y) / 2
-            const dx = n.x - v.x
-            const dy = n.y - v.y
-            const len = Math.hypot(dx, dy)
-            const ux = (dx / len) * 11
-            const uy = (dy / len) * 11
+    <>
+      <ambientLight intensity={0.75} />
+      <directionalLight position={[3, 4, 5]} intensity={1.05} />
+      <directionalLight position={[-2, -1, 3]} intensity={0.35} />
+      <group ref={root}>
+        <group ref={bonds}>
+          {base.map((v, i) => {
+            const n = base[(i + 1) % 6]
+            const m = v.clone().add(n).multiplyScalar(0.5)
+            const d = n.clone().sub(v)
+            const q = new THREE.Quaternion().setFromUnitVectors(Y_UP, d.clone().normalize())
             return (
-              <g key={`g-${i}`} className={styles.ramanStretchCue}>
-                <line
-                  x1={mx - ux}
-                  y1={my - uy}
-                  x2={mx + ux}
-                  y2={my + uy}
-                  className={styles.ramanArrow}
-                />
-              </g>
+              <mesh key={i} position={m.toArray()} quaternion={q}>
+                <cylinderGeometry args={[0.055, 0.055, restLen, 10]} />
+                <meshStandardMaterial color="#5a5553" roughness={0.55} />
+              </mesh>
             )
           })}
-        </g>
-      ) : null}
-      {play === 'd' || play === 'both' ? (
-        <g className={styles.ramanCue} aria-hidden>
-          {VERTS.map((v, i) => {
-            const ux = (v.x / R) * 18
-            const uy = (v.y / R) * 18
-            return (
-              <line
-                key={`d-${i}`}
-                x1={v.x * 0.55}
-                y1={v.y * 0.55}
-                x2={v.x * 0.55 + ux * 0.55}
-                y2={v.y * 0.55 + uy * 0.55}
-                className={`${styles.ramanArrow} ${styles.ramanBreathCue}`}
+        </group>
+        <group ref={atoms}>
+          {base.map((v, i) => (
+            <mesh key={i} position={v.toArray()}>
+              <sphereGeometry args={[0.2, 24, 24]} />
+              <meshStandardMaterial
+                color="#2d2b2b"
+                roughness={0.35}
+                metalness={0.2}
+                emissive="#ec3013"
+                emissiveIntensity={0.2}
               />
-            )
-          })}
-        </g>
-      ) : null}
-    </g>
+            </mesh>
+          ))}
+        </group>
+      </group>
+    </>
   )
 }
 
-/** Stylized disordered-carbon Raman envelope: tall D, shorter G. */
 function spectrumPath(highlight: Band | 'off') {
-  // viewBox region for spectrum: x 40–400, y baseline 268, peak height up
   const pts: [number, number][] = []
-  for (let x = 40; x <= 400; x += 2) {
-    const cm = 1000 + ((x - 40) / 360) * 800 // 1000–1800 cm⁻¹
-    const d = 78 * Math.exp(-0.5 * ((cm - 1350) / 48) ** 2)
-    const g = 48 * Math.exp(-0.5 * ((cm - 1580) / 42) ** 2)
+  for (let x = 36; x <= 520; x += 2) {
+    const cm = 1000 + ((x - 36) / 484) * 800
+    const d = 92 * Math.exp(-0.5 * ((cm - 1350) / 48) ** 2)
+    const g = 56 * Math.exp(-0.5 * ((cm - 1580) / 42) ** 2)
     const muteD = highlight === 'g' ? 0.22 : 1
     const muteG = highlight === 'd' ? 0.22 : 1
-    const y = 268 - (d * muteD + g * muteG)
+    const y = 168 - (d * muteD + g * muteG)
     pts.push([x, y])
   }
   return pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ')
@@ -133,8 +134,8 @@ export function RamanBands({ active }: { active: boolean }) {
   }, [active])
 
   const highlight = active ? band : 'off'
-  const dX = 40 + ((1350 - 1000) / 800) * 360
-  const gX = 40 + ((1580 - 1000) / 800) * 360
+  const dX = 36 + ((1350 - 1000) / 800) * 484
+  const gX = 36 + ((1580 - 1000) / 800) * 484
 
   return (
     <div className={styles.raman}>
@@ -158,106 +159,97 @@ export function RamanBands({ active }: { active: boolean }) {
         ))}
       </div>
 
-      <svg
-        className={styles.chart}
-        viewBox="0 0 440 320"
-        role="img"
-        aria-label={CAPTIONS[band]}
-      >
-        <text x="220" y="22" textAnchor="middle" className={styles.label} fontSize="13">
-          aromatic carbon · molecular motion
-        </text>
-
-        <Ring cx={220} cy={108} mode={band} active={active} />
-
-        {/* Spectrum */}
-        <text x="40" y="198" className={styles.label} fontSize="12">
-          Raman intensity
-        </text>
-        <line x1="40" y1="268" x2="400" y2="268" className={styles.axis} />
-        <line x1="40" y1="210" x2="40" y2="268" className={styles.axis} />
-
-        <path
-          d={spectrumPath(highlight === 'off' ? 'both' : highlight)}
-          className={styles.ramanSpectrum}
-          fill="none"
-        />
-
-        <g opacity={highlight === 'd' || highlight === 'both' || highlight === 'off' ? 1 : 0.35}>
-          <line
-            x1={dX}
-            y1="212"
-            x2={dX}
-            y2="268"
-            stroke="var(--color-accent)"
-            strokeWidth="1.5"
-            strokeDasharray="3 4"
-            opacity="0.55"
-          />
-          <text
-            x={dX}
-            y="286"
-            textAnchor="middle"
-            className={styles.labelHi}
-            fontSize="13"
+      <div className={styles.ramanStack}>
+        <div className={styles.ramanMole}>
+          <Canvas
+            dpr={[1, 1.75]}
+            camera={{ position: [0, 0.15, 4.6], fov: 36 }}
+            gl={{ antialias: true, alpha: true }}
           >
-            D
-          </text>
-          <text
-            x={dX}
-            y="302"
-            textAnchor="middle"
-            className={styles.label}
-            fontSize="11"
-            opacity="0.65"
-          >
-            ~1350
-          </text>
-        </g>
+            <Suspense fallback={null}>
+              <AromaticRing3D mode={band} active={active} />
+            </Suspense>
+          </Canvas>
+        </div>
 
-        <g opacity={highlight === 'g' || highlight === 'both' || highlight === 'off' ? 1 : 0.35}>
-          <line
-            x1={gX}
-            y1="228"
-            x2={gX}
-            y2="268"
-            stroke="var(--color-accent)"
-            strokeWidth="1.5"
-            strokeDasharray="3 4"
-            opacity="0.55"
-          />
-          <text
-            x={gX}
-            y="286"
-            textAnchor="middle"
-            className={styles.labelHi}
-            fontSize="13"
-          >
-            G
-          </text>
-          <text
-            x={gX}
-            y="302"
-            textAnchor="middle"
-            className={styles.label}
-            fontSize="11"
-            opacity="0.65"
-          >
-            ~1580
-          </text>
-        </g>
-
-        <text
-          x="400"
-          y="286"
-          textAnchor="end"
-          className={styles.label}
-          fontSize="11"
-          opacity="0.5"
+        <svg
+          className={styles.ramanSpecSvg}
+          viewBox="0 0 560 200"
+          role="img"
+          aria-label={CAPTIONS[band]}
         >
-          cm⁻¹
-        </text>
-      </svg>
+          <text x="36" y="22" className={styles.label} fontSize="12" opacity="0.65">
+            Raman intensity
+          </text>
+          <line x1="36" y1="168" x2="520" y2="168" className={styles.axis} />
+          <line x1="36" y1="36" x2="36" y2="168" className={styles.axis} />
+          <path
+            d={spectrumPath(highlight === 'off' ? 'both' : highlight)}
+            className={styles.ramanSpectrum}
+            fill="none"
+          />
+          <g opacity={highlight === 'd' || highlight === 'both' || highlight === 'off' ? 1 : 0.35}>
+            <line
+              x1={dX}
+              y1="52"
+              x2={dX}
+              y2="168"
+              stroke="var(--color-accent)"
+              strokeWidth="1.75"
+              strokeDasharray="3 4"
+              opacity="0.55"
+            />
+            <text x={dX} y="188" textAnchor="middle" className={styles.labelHi} fontSize="15">
+              D
+            </text>
+            <text
+              x={dX}
+              y="28"
+              textAnchor="middle"
+              className={styles.label}
+              fontSize="11"
+              opacity="0.55"
+            >
+              ~1350
+            </text>
+          </g>
+          <g opacity={highlight === 'g' || highlight === 'both' || highlight === 'off' ? 1 : 0.35}>
+            <line
+              x1={gX}
+              y1="78"
+              x2={gX}
+              y2="168"
+              stroke="var(--color-accent)"
+              strokeWidth="1.75"
+              strokeDasharray="3 4"
+              opacity="0.55"
+            />
+            <text x={gX} y="188" textAnchor="middle" className={styles.labelHi} fontSize="15">
+              G
+            </text>
+            <text
+              x={gX}
+              y="28"
+              textAnchor="middle"
+              className={styles.label}
+              fontSize="11"
+              opacity="0.55"
+            >
+              ~1580
+            </text>
+          </g>
+          <text
+            x="520"
+            y="188"
+            textAnchor="end"
+            className={styles.label}
+            fontSize="12"
+            opacity="0.5"
+          >
+            cm⁻¹
+          </text>
+        </svg>
+      </div>
 
       <p className={styles.ramanCaption}>{CAPTIONS[band]}</p>
     </div>

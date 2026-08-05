@@ -2,8 +2,9 @@ import styles from './Interactives.module.css'
 import { asset } from '../../lib/asset'
 
 /**
- * Approach transect (park → garnet horizon), from Google Earth path stats.
- * Elevations converted to feet: park ~3,330 ft, garnets ~4,173 ft, ridge ~4,787 ft.
+ * Approach transect (park → garnets → cliff → plateau), from Google Earth path stats.
+ * Elevations converted to feet: park ~3,330 ft, garnets ~4,173 ft, plateau ~4,790 ft.
+ * Cliff begins ~200 ft past the garnet horizon.
  */
 const ELEV = [
   [0.0, 3330], // park
@@ -14,10 +15,15 @@ const ELEV = [
   [0.52, 3953],
   [0.62, 4085],
   [0.72, 4173], // garnets
-  [0.82, 4347],
-  [0.92, 4610],
-  [1.0, 4787], // ridge / orange layer above
+  [0.78, 4205], // ~200 ft past garnets — cliff toe
+  [0.81, 4480], // cliff face (~275 ft rise)
+  [0.86, 4585], // sloping plateau begins
+  [0.93, 4705],
+  [1.0, 4787], // plateau crest
 ] as const
+
+/** Indices that should stay sharp (no bezier rounding) — cliff face. */
+const SHARP_AFTER = new Set([8]) // segment garnet-toe → cliff top
 
 const X0 = 64
 const X1 = 530
@@ -34,13 +40,17 @@ function yAt(elev: number) {
   return Y_TOP + ((E_MAX - elev) / (E_MAX - E_MIN)) * (Y_BOT - Y_TOP)
 }
 
-function smoothPath(points: readonly (readonly [number, number])[]) {
+function profilePathFrom(points: readonly (readonly [number, number])[]) {
   if (points.length < 2) return ''
   const pts = points.map(([t, e]) => [xAt(t), yAt(e)] as const)
   let d = `M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`
   for (let i = 1; i < pts.length; i++) {
     const [x0, y0] = pts[i - 1]
     const [x1, y1] = pts[i]
+    if (SHARP_AFTER.has(i - 1)) {
+      d += ` L ${x1.toFixed(1)} ${y1.toFixed(1)}`
+      continue
+    }
     const c1x = x0 + (x1 - x0) * 0.45
     const c2x = x0 + (x1 - x0) * 0.55
     d += ` C ${c1x.toFixed(1)} ${y0.toFixed(1)}, ${c2x.toFixed(1)} ${y1.toFixed(1)}, ${x1.toFixed(1)} ${y1.toFixed(1)}`
@@ -48,9 +58,11 @@ function smoothPath(points: readonly (readonly [number, number])[]) {
   return d
 }
 
-const profilePath = smoothPath(ELEV)
+const profilePath = profilePathFrom(ELEV)
 const park = ELEV[0]
 const garnet = ELEV[7]
+const cliffToe = ELEV[8]
+const cliffTop = ELEV[9]
 const ridge = ELEV[ELEV.length - 1]
 
 export function LocalityMap({ active }: { active: boolean }) {
@@ -58,6 +70,10 @@ export function LocalityMap({ active }: { active: boolean }) {
   const py = yAt(park[1])
   const gx = xAt(garnet[0])
   const gy = yAt(garnet[1])
+  const cx = (xAt(cliffToe[0]) + xAt(cliffTop[0])) / 2
+  const cy = (yAt(cliffToe[1]) + yAt(cliffTop[1])) / 2
+  const plateauX = xAt(0.93)
+  const plateauY = yAt(4705)
   const rx = xAt(ridge[0])
 
   return (
@@ -115,13 +131,13 @@ export function LocalityMap({ active }: { active: boolean }) {
         className={styles.elevChart}
         viewBox="0 0 560 230"
         role="img"
-        aria-label="Elevation profile from the parking area up to the garnet layer, in feet."
+        aria-label="Elevation profile from the parking area past the garnet layer to a cliff and sloping plateau, in feet."
       >
         <text x={X0} y="16" className={styles.label} fontSize="13">
-          Park → garnets
+          Park → garnets → cliff → plateau
         </text>
         <text x={X1} y="16" textAnchor="end" fontSize="12" fill="currentColor" opacity="0.5">
-          Δ ≈ 840 ft · slopes to 59°
+          Δ ≈ 1,460 ft · cliff ~200 ft past
         </text>
 
         <path
@@ -164,6 +180,27 @@ export function LocalityMap({ active }: { active: boolean }) {
         />
         <text x={gx} y={gy - 12} textAnchor="middle" className={styles.labelHi} fontSize="13">
           garnets · 4,170 ft
+        </text>
+
+        <text
+          x={cx + 10}
+          y={cy}
+          textAnchor="start"
+          fontSize="11"
+          fill="currentColor"
+          opacity="0.55"
+        >
+          cliff
+        </text>
+        <text
+          x={plateauX}
+          y={plateauY - 10}
+          textAnchor="middle"
+          fontSize="11"
+          fill="currentColor"
+          opacity="0.55"
+        >
+          sloping plateau
         </text>
       </svg>
     </figure>

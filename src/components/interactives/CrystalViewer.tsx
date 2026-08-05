@@ -1,57 +1,57 @@
 import { Suspense, useMemo, useRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { OrbitControls, Line } from '@react-three/drei'
+import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 import structure from '../../data/garnetAtoms.json'
-import styles from './Interactives.module.css'
+import { DodecahedronWire } from '../three/Dodecahedron'
+import { useTalkBeats } from '../../hooks/useTalkBeats'
 import { usePrefersReducedMotion } from '../../hooks/useActiveSlide'
+import styles from './Interactives.module.css'
 
-/** Regular dodecahedron edge vertices (golden-ratio construction). */
-function useDodecahedronEdges(scale: number) {
-  return useMemo(() => {
-    const phi = (1 + Math.sqrt(5)) / 2
-    const verts: THREE.Vector3[] = []
-    // cube corners
-    for (const x of [-1, 1])
-      for (const y of [-1, 1])
-        for (const z of [-1, 1]) verts.push(new THREE.Vector3(x, y, z))
-    // rectangles
-    for (const x of [-1, 1])
-      for (const y of [-1 / phi, 1 / phi]) verts.push(new THREE.Vector3(0, x * phi, y))
-    for (const y of [-1, 1])
-      for (const z of [-1 / phi, 1 / phi]) verts.push(new THREE.Vector3(z, 0, y * phi))
-    for (const z of [-1, 1])
-      for (const x of [-1 / phi, 1 / phi]) verts.push(new THREE.Vector3(z * phi, x, 0))
+const X_COLORS = {
+  framework: '#ec3013', // Ca in andradite prototype → pyralspite X
+  pyrope: '#7eb8c9', // Mg-ish cool
+  almandine: '#ec3013', // Fe-rich warm accent
+  spessartine: '#c45c9a', // Mn-ish
+} as const
 
-    // normalize & scale
-    const scaled = verts.map((v) => v.normalize().multiplyScalar(scale))
+/** Octahedral Y-site in pyralspite is Al (andradite prototype stores it as Fe). */
+const Y_COLOR = '#a8b4c0'
 
-    // connect vertices within edge length threshold
-    const edges: [THREE.Vector3, THREE.Vector3][] = []
-    const seen = new Set<string>()
-    for (let i = 0; i < scaled.length; i++) {
-      for (let j = i + 1; j < scaled.length; j++) {
-        const d = scaled[i].distanceTo(scaled[j])
-        if (d > 0.55 * scale && d < 0.85 * scale) {
-          const key = `${i}-${j}`
-          if (!seen.has(key)) {
-            seen.add(key)
-            edges.push([scaled[i], scaled[j]])
-          }
-        }
-      }
-    }
-    return edges
-  }, [scale])
-}
+const BEATS = [
+  {
+    label: 'Framework',
+    caption: 'Shared Ia‑3d architecture — habit outside, atoms inside.',
+    key: 'framework' as const,
+    xGlow: 0.15,
+  },
+  {
+    label: 'X-site',
+    caption: 'Dodecahedral X-site — where the pyralspite series diverges.',
+    key: 'framework' as const,
+    xGlow: 1,
+  },
+  {
+    label: 'Pyrope',
+    caption: 'Mg on X — high-pressure mantle and deep crust.',
+    key: 'pyrope' as const,
+    xGlow: 0.85,
+  },
+  {
+    label: 'Almandine',
+    caption: 'Fe on X — Aquarius Mountains sits here.',
+    key: 'almandine' as const,
+    xGlow: 1,
+  },
+  {
+    label: 'Spessartine',
+    caption: 'Mn on X — pegmatites and Mn-rich rocks.',
+    key: 'spessartine' as const,
+    xGlow: 0.85,
+  },
+] as const
 
-function Bond({
-  a,
-  b,
-}: {
-  a: [number, number, number]
-  b: [number, number, number]
-}) {
+function Bond({ a, b }: { a: [number, number, number]; b: [number, number, number] }) {
   const mid = useMemo(() => {
     const A = new THREE.Vector3(...a)
     const B = new THREE.Vector3(...b)
@@ -59,13 +59,11 @@ function Bond({
     const len = dir.length()
     const quat = new THREE.Quaternion()
     quat.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize())
-    const pos = A.clone().add(B).multiplyScalar(0.5)
-    return { len, quat, pos }
+    return { len, quat, pos: A.clone().add(B).multiplyScalar(0.5) }
   }, [a, b])
-
   return (
     <mesh position={mid.pos.toArray()} quaternion={mid.quat}>
-      <cylinderGeometry args={[0.035, 0.035, mid.len, 6]} />
+      <cylinderGeometry args={[0.032, 0.032, mid.len, 6]} />
       <meshStandardMaterial color="#8a8686" roughness={0.7} metalness={0.1} />
     </mesh>
   )
@@ -74,13 +72,16 @@ function Bond({
 function Scene({
   active,
   backdrop,
+  xColor,
+  xGlow,
 }: {
   active: boolean
   backdrop: boolean
+  xColor: string
+  xGlow: number
 }) {
   const group = useRef<THREE.Group>(null)
   const reduced = usePrefersReducedMotion()
-  const edges = useDodecahedronEdges(backdrop ? 5.4 : 4.2)
   const scale = backdrop ? 0.52 : 0.42
 
   useFrame((_, dt) => {
@@ -96,21 +97,18 @@ function Scene({
       <ambientLight intensity={0.65} />
       <directionalLight position={[6, 8, 4]} intensity={1.1} />
       <directionalLight position={[-4, -2, -6]} intensity={0.35} />
-      {/* Centered behind copy — habit reads as atmosphere */}
+      <pointLight
+        position={[0, 0.5, 2]}
+        intensity={0.3 + xGlow * 1.2}
+        color={xColor}
+        distance={12}
+      />
       <group ref={group} position={backdrop ? [0, 0.15, -0.4] : [0, 0, 0]}>
-        {/* Habit wireframe */}
-        {edges.map((pair, i) => (
-          <Line
-            key={i}
-            points={pair}
-            color="#ec3013"
-            lineWidth={backdrop ? 1.15 : 1.2}
-            transparent
-            opacity={backdrop ? 0.38 : 0.55}
-          />
-        ))}
-
-        {/* Crystal structure */}
+        <DodecahedronWire
+          scale={backdrop ? 3.5 : 4.2}
+          opacity={0.35 + xGlow * 0.2}
+          lineWidth={backdrop ? 1.15 : 1.2}
+        />
         <group>
           {bonds.map(([i, j]) => {
             const A = atoms[i]
@@ -124,25 +122,32 @@ function Scene({
               />
             )
           })}
-          {atoms.map((atom) => (
-            <mesh
-              key={atom.id}
-              position={[atom.x * scale, atom.y * scale, atom.z * scale]}
-            >
-              <sphereGeometry args={[atom.radius * 0.85, 16, 16]} />
-              <meshStandardMaterial
-                color={atom.color}
-                roughness={0.35}
-                metalness={atom.element === 'Fe' ? 0.45 : 0.15}
-              />
-            </mesh>
-          ))}
+          {atoms.map((atom) => {
+            const isX = atom.element === 'Ca'
+            const isY = atom.element === 'Fe'
+            const color = isX ? xColor : isY ? Y_COLOR : atom.color
+            const r = atom.radius * 0.85 * (isX ? 1 + xGlow * 0.25 : 1)
+            return (
+              <mesh
+                key={atom.id}
+                position={[atom.x * scale, atom.y * scale, atom.z * scale]}
+              >
+                <sphereGeometry args={[r, 16, 16]} />
+                <meshStandardMaterial
+                  color={color}
+                  roughness={0.35}
+                  metalness={isX ? 0.55 : isY ? 0.4 : 0.15}
+                  emissive={isX ? xColor : '#000000'}
+                  emissiveIntensity={isX ? xGlow * 0.55 : 0}
+                />
+              </mesh>
+            )
+          })}
         </group>
       </group>
       <OrbitControls
         enablePan={false}
         enableZoom={false}
-        autoRotate={false}
         makeDefault
         target={backdrop ? [0, 0.15, -0.4] : [0, 0, 0]}
       />
@@ -157,22 +162,22 @@ export function CrystalViewer({
   active: boolean
   backdrop?: boolean
 }) {
+  const talk = useTalkBeats(BEATS, active)
+  const xColor = X_COLORS[talk.beat.key]
+
   return (
-    <div
-      className={styles.crystal}
-      data-backdrop={backdrop || undefined}
-    >
+    <div className={styles.crystal} data-backdrop={backdrop || undefined}>
       <div className={styles.legend}>
         <div className={styles.legendRow}>
           <span className={styles.swatch} style={{ background: '#3b6fa0' }} /> Si
         </div>
         <div className={styles.legendRow}>
-          <span className={styles.swatch} style={{ background: '#c4a35a' }} /> Fe
+          <span className={styles.swatch} style={{ background: Y_COLOR }} /> Al
           <span className={styles.legendNote}>Y</span>
         </div>
         <div className={styles.legendRow}>
-          <span className={styles.swatch} style={{ background: '#ec3013' }} /> Ca
-          <span className={styles.legendNote}>X</span>
+          <span className={styles.swatch} style={{ background: xColor }} /> X
+          <span className={styles.legendNote}>{talk.beat.label}</span>
         </div>
         <div className={styles.legendRow}>
           <span className={styles.swatch} style={{ background: '#d7d3d3' }} /> O
@@ -188,11 +193,33 @@ export function CrystalViewer({
         style={{ width: '100%', height: '100%' }}
       >
         <Suspense fallback={null}>
-          <Scene active={active} backdrop={backdrop} />
+          <Scene
+            active={active}
+            backdrop={backdrop}
+            xColor={xColor}
+            xGlow={talk.beat.xGlow}
+          />
         </Suspense>
       </Canvas>
+      {backdrop && (
+        <div className={styles.crystalBeatChrome}>
+          <div className={styles.crystalBeatStep}>{talk.beat.label}</div>
+          <p className={styles.crystalBeatCaption}>{talk.beat.caption}</p>
+          <div className={styles.eddyNav}>
+            <button type="button" className="btn" disabled={talk.index === 0} onClick={talk.prev}>
+              ←
+            </button>
+            <span className={styles.stepLabel}>
+              {talk.index + 1} / {talk.total}
+            </span>
+            <button type="button" className="btn btn-primary" onClick={talk.next}>
+              {talk.index >= talk.total - 1 ? 'Replay ↻' : 'Next →'}
+            </button>
+          </div>
+        </div>
+      )}
       <div className={styles.crystalCaption}>
-        {structure.mineral} · {structure.source} · drag to orbit
+        {structure.mineral} · drag to orbit
       </div>
     </div>
   )

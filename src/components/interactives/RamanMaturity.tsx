@@ -102,7 +102,7 @@ export function RamanMaturity({ active }: { active: boolean }) {
     return { path: { xs, ys }, maxY }
   }, [t])
 
-  const plot = { x0: 56, y0: 28, x1: 520, y1: 248 }
+  const plot = { x0: 56, y0: 52, x1: 520, y1: 248 }
   const xToPx = (x: number) =>
     plot.x0 + ((x - X_MIN) / (X_MAX - X_MIN)) * (plot.x1 - plot.x0)
   const yToPx = (y: number) =>
@@ -119,7 +119,9 @@ export function RamanMaturity({ active }: { active: boolean }) {
 
   const stage = stageFor(t)
   const bandOpacity = smoothstep(0.15, 0.4, t)
-  const showCoatingHint = t >= 0.42 && t <= 0.68
+  // Show near Broad D·G only — hide at Sharper and beyond
+  const showCoatingHint = t >= 0.28 && t < 0.55
+  const dgMidX = (xToPx(D_POS) + xToPx(G_POS)) / 2
 
   return (
     <div className={styles.ramanMaturity}>
@@ -139,6 +141,24 @@ export function RamanMaturity({ active }: { active: boolean }) {
             <stop offset="100%" stopColor="var(--color-accent)" stopOpacity="0" />
           </linearGradient>
         </defs>
+
+        <text
+          x={plot.x0 + 8}
+          y={16}
+          fontSize="12"
+          fill="currentColor"
+          opacity="0.55"
+        >
+          {stage.blurb}
+        </text>
+        <text
+          x={plot.x0 + 8}
+          y={34}
+          className={styles.label}
+          fontSize="14"
+        >
+          {stage.name}
+        </text>
 
         <line
           x1={plot.x0}
@@ -210,6 +230,18 @@ export function RamanMaturity({ active }: { active: boolean }) {
             strokeWidth="1.5"
             strokeDasharray="4 4"
           />
+          {showCoatingHint && (
+            <text
+              x={dgMidX}
+              y={plot.y0 - 6}
+              textAnchor="middle"
+              fontSize="11"
+              fill="var(--color-accent)"
+              opacity="0.85"
+            >
+              coating lives near here
+            </text>
+          )}
           <text
             x={xToPx(D_POS)}
             y={plot.y0 + 4}
@@ -239,37 +271,6 @@ export function RamanMaturity({ active }: { active: boolean }) {
           strokeLinejoin="round"
           strokeLinecap="round"
         />
-
-        <text
-          x={plot.x0 + 8}
-          y={plot.y0 + 18}
-          className={styles.label}
-          fontSize="14"
-        >
-          {stage.name}
-        </text>
-        <text
-          x={plot.x0 + 8}
-          y={plot.y0 + 36}
-          fontSize="12"
-          fill="currentColor"
-          opacity="0.55"
-        >
-          {stage.blurb}
-        </text>
-
-        {showCoatingHint && (
-          <text
-            x={xToPx(1480)}
-            y={plot.y0 + 58}
-            textAnchor="middle"
-            fontSize="11"
-            fill="var(--color-accent)"
-            opacity="0.85"
-          >
-            ← coating lives near here
-          </text>
-        )}
       </svg>
 
       <div className={styles.ramanSliderWrap}>

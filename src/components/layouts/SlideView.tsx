@@ -16,6 +16,22 @@ import styles from './Layouts.module.css'
 const CrystalViewer = lazy(() =>
   import('../interactives/CrystalViewer').then((m) => ({ default: m.CrystalViewer })),
 )
+const EddyField = lazy(() =>
+  import('../interactives/EddyField').then((m) => ({ default: m.EddyField })),
+)
+const LibsStack3D = lazy(() =>
+  import('../interactives/LibsStack3D').then((m) => ({ default: m.LibsStack3D })),
+)
+const CoverAtmosphere = lazy(() =>
+  import('../interactives/CoverAtmosphere').then((m) => ({
+    default: m.CoverAtmosphere,
+  })),
+)
+const EddyPhotoField = lazy(() =>
+  import('../interactives/EddyPhotoField').then((m) => ({
+    default: m.EddyPhotoField,
+  })),
+)
 
 const rise = {
   hidden: { opacity: 0, y: 14 },
@@ -38,7 +54,8 @@ function Rise({
   return (
     <motion.div
       className={className}
-      initial="hidden"
+      // Avoid mount flash: don't play hidden→show on first paint; only when `active` changes.
+      initial={false}
       animate={active ? 'show' : 'hidden'}
       variants={rise}
       transition={{ duration: 0.45, ease: [0.2, 0.8, 0.2, 1], delay }}
@@ -138,6 +155,12 @@ function Interactive({
       return <LibsBlast active={active} />
     case 'libs-peel':
       return <LibsPeel active={active} />
+    case 'libs-stack-3d':
+      return (
+        <Suspense fallback={<div style={{ height: '100%' }} />}>
+          <LibsStack3D active={active} />
+        </Suspense>
+      )
     case 'cn-ratio':
       return <CnRatio active={active} />
     case 'raman-maturity':
@@ -146,6 +169,18 @@ function Interactive({
       return <RamanBands active={active} />
     case 'raman-zoom':
       return <RamanZoom active={active} />
+    case 'eddy-field':
+      return (
+        <Suspense fallback={<div style={{ height: '100%', background: '#1a1715' }} />}>
+          <EddyField active={active} />
+        </Suspense>
+      )
+    case 'eddy-photo':
+      return (
+        <Suspense fallback={<div style={{ height: '100%', background: '#1a1715' }} />}>
+          <EddyPhotoField active={active} />
+        </Suspense>
+      )
     case 'crystal-viewer':
       return (
         <Suspense
@@ -183,6 +218,9 @@ export function SlideView({
             <div className={styles.scrim} />
           </div>
         )}
+        <Suspense fallback={null}>
+          <CoverAtmosphere active={active} />
+        </Suspense>
         <Rise active={active} className={styles.content}>
           {slide.kicker && <div className={styles.brand}>{slide.kicker}</div>}
           <h1 className={styles.display}>{slide.displayTitle}</h1>
@@ -210,8 +248,9 @@ export function SlideView({
 
   if (slide.layout === 'bleed') {
     const fit = slide.image?.fit ?? 'cover'
+    const photo = slide.bleedTone === 'photo'
     return (
-      <>
+      <div className={photo ? styles.bleedPhoto : undefined}>
         <div className={styles.bleed} data-fit={fit}>
           {slide.interactive ? (
             <Interactive kind={slide.interactive} active={active} />
@@ -226,18 +265,34 @@ export function SlideView({
           <div className={`${styles.bleedKicker} kicker`}>{slide.kicker}</div>
         )}
         {(slide.title || slide.body) && (
-          <Rise active={active} className={styles.bleedCopy}>
-            {slide.title && <h2>{slide.title}</h2>}
-            {slide.body && <p className={`${styles.body} text-muted`}>{slide.body}</p>}
+          <Rise
+            active={active}
+            className={`${styles.bleedCopy}${photo ? ` ${styles.bleedCopyPhoto}` : ''}`}
+          >
+            {slide.title && (
+              <h2>
+                {slide.title.split('\n').map((line, i) => (
+                  <span key={line}>
+                    {i > 0 && <br />}
+                    {line}
+                  </span>
+                ))}
+              </h2>
+            )}
+            {slide.body && (
+              <p className={`${styles.body}${photo ? '' : ' text-muted'}`}>{slide.body}</p>
+            )}
           </Rise>
         )}
-      </>
+      </div>
     )
   }
 
   if (slide.layout === 'stage') {
+    const darkStage =
+      slide.interactive === 'eddy-field' || slide.interactive === 'crystal-viewer'
     return (
-      <div className={styles.stage}>
+      <div className={styles.stage} data-theme={darkStage ? 'dark' : undefined}>
         {slide.interactive && (
           <div className={styles.stageBg}>
             <Interactive kind={slide.interactive} active={active} backdrop />
@@ -299,40 +354,51 @@ export function SlideView({
   }
 
   if (slide.layout === 'split') {
+    const media = slide.interactive ? (
+      <Rise active={active} delay={0.08} className={styles.splitInteractive}>
+        <Interactive kind={slide.interactive} active={active} />
+      </Rise>
+    ) : slide.image ? (
+      <Rise active={active} delay={0.08} className={styles.splitFigure}>
+        <motion.img
+          src={slide.image.src}
+          alt={slide.image.alt}
+          initial={false}
+          animate={active ? { scale: 1.03 } : { scale: 1 }}
+          transition={{ duration: 8, ease: 'linear' }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      </Rise>
+    ) : null
+
+    const copy = (
+      <Rise active={active} className={styles.splitCopy}>
+        <Kicker text={slide.kicker} />
+        <h2>{slide.title}</h2>
+        {slide.body && <p className={`${styles.body} text-muted`}>{slide.body}</p>}
+        {slide.bullets && (
+          <ul className={styles.bullets}>
+            {slide.bullets.map((b) => (
+              <li key={b}>{b}</li>
+            ))}
+          </ul>
+        )}
+      </Rise>
+    )
+
     return (
-      <div className={styles.split}>
-        <Rise active={active} className={styles.splitCopy}>
-          <Kicker text={slide.kicker} />
-          <h2>{slide.title}</h2>
-          {slide.body && <p className={`${styles.body} text-muted`}>{slide.body}</p>}
-          {slide.bullets && (
-            <ul className={styles.bullets}>
-              {slide.bullets.map((b) => (
-                <li key={b}>{b}</li>
-              ))}
-            </ul>
-          )}
-        </Rise>
-        {slide.interactive ? (
-          <Rise active={active} delay={0.08} className={styles.splitInteractive}>
-            <Interactive kind={slide.interactive} active={active} />
-          </Rise>
-        ) : slide.image ? (
-          <Rise active={active} delay={0.08} className={styles.splitFigure}>
-            <motion.img
-              src={slide.image.src}
-              alt={slide.image.alt}
-              initial={false}
-              animate={
-                active
-                  ? { scale: 1.03 }
-                  : { scale: 1 }
-              }
-              transition={{ duration: 8, ease: 'linear' }}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
-          </Rise>
-        ) : null}
+      <div className={`${styles.split}${slide.splitFlip ? ` ${styles.splitFlip}` : ''}`}>
+        {slide.splitFlip ? (
+          <>
+            {media}
+            {copy}
+          </>
+        ) : (
+          <>
+            {copy}
+            {media}
+          </>
+        )}
       </div>
     )
   }
