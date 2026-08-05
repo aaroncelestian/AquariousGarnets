@@ -13,7 +13,7 @@ export function useActiveSlide(count: number) {
   }, [])
 
   const goTo = useCallback(
-    (index: number) => {
+    (index: number, behavior: ScrollBehavior = 'smooth') => {
       const root = containerRef.current
       if (!root) return
       const clamped = Math.max(0, Math.min(count - 1, index))
@@ -24,14 +24,21 @@ export function useActiveSlide(count: number) {
       setIndex(clamped)
 
       // Position from the scroll container so snap + keyboard stay in sync.
-      const top = el.offsetTop
-      root.scrollTo({ top, behavior: 'smooth' })
+      // After layout thrash (e.g. fullscreen), offsetTop must be read after paint.
+      const scroll = () => {
+        root.scrollTo({ top: el.offsetTop, behavior })
+      }
+      if (behavior === 'auto') {
+        requestAnimationFrame(() => requestAnimationFrame(scroll))
+      } else {
+        scroll()
+      }
 
       if (settleTimerRef.current) window.clearTimeout(settleTimerRef.current)
       settleTimerRef.current = window.setTimeout(() => {
         pendingIndexRef.current = null
         settleTimerRef.current = null
-      }, 450)
+      }, behavior === 'auto' ? 80 : 450)
     },
     [count, setIndex],
   )

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { usePrefersReducedMotion } from '../../hooks/useActiveSlide'
 import styles from './Interactives.module.css'
 
@@ -7,7 +7,7 @@ export function ImageSlideshow({
   active,
   intervalMs = 3200,
 }: {
-  images: { src: string; alt: string }[]
+  images: { src: string; alt: string; offsetTop?: string }[]
   active: boolean
   intervalMs?: number
 }) {
@@ -37,6 +37,14 @@ export function ImageSlideshow({
           alt={i === index ? img.alt : ''}
           className={styles.slideshowImg}
           data-active={i === index}
+          data-offset={img.offsetTop ? 'true' : undefined}
+          style={
+            img.offsetTop
+              ? ({
+                  '--slideshow-offset-top': img.offsetTop,
+                } as CSSProperties)
+              : undefined
+          }
           draggable={false}
         />
       ))}

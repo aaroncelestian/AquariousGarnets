@@ -28,9 +28,10 @@ const SHARP_AFTER = new Set([8]) // segment garnet-toe → cliff top
 const X0 = 64
 const X1 = 530
 const Y_TOP = 36
-const Y_BOT = 188
+const Y_BOT = 168
 const E_MAX = 4850
 const E_MIN = 3250
+const VIEW_H = 220
 
 function xAt(t: number) {
   return X0 + t * (X1 - X0)
@@ -129,13 +130,10 @@ export function LocalityMap({ active }: { active: boolean }) {
 
       <svg
         className={styles.elevChart}
-        viewBox="0 0 560 230"
+        viewBox={`0 0 560 ${VIEW_H}`}
         role="img"
         aria-label="Elevation profile from the parking area past the garnet layer to a cliff and sloping plateau, in feet."
       >
-        <text x={X0} y="16" className={styles.label} fontSize="13">
-          Park → garnets → cliff → plateau
-        </text>
         <text x={X1} y="16" textAnchor="end" fontSize="12" fill="currentColor" opacity="0.5">
           Δ ≈ 1,460 ft · cliff ~200 ft past
         </text>
@@ -202,6 +200,28 @@ export function LocalityMap({ active }: { active: boolean }) {
         >
           sloping plateau
         </text>
+
+        {/* Station labels below the baseline — keep clear of the slide edge */}
+        {(
+          [
+            [park[0], 'Park'],
+            [garnet[0], 'Garnets'],
+            [(cliffToe[0] + cliffTop[0]) / 2, 'Cliff'],
+            [0.93, 'Plateau'],
+          ] as const
+        ).map(([t, label]) => (
+          <text
+            key={label}
+            x={xAt(t)}
+            y={Y_BOT + 22}
+            textAnchor="middle"
+            fontSize="12"
+            fill="currentColor"
+            opacity="0.62"
+          >
+            {label}
+          </text>
+        ))}
       </svg>
     </figure>
   )

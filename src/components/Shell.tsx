@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { slides, CHAPTERS } from '../data/slides'
 import { useActiveSlide } from '../hooks/useActiveSlide'
+import { useViewportHeight } from '../hooks/useViewportHeight'
 import { NavContext } from '../hooks/useSlideNav'
 import { SlideView } from './layouts/SlideView'
 import styles from './Shell.module.css'
@@ -12,12 +13,12 @@ function getFullscreenElement() {
   return document.fullscreenElement ?? doc.webkitFullscreenElement ?? null
 }
 
-async function enterFullscreen() {
-  const el = document.documentElement as HTMLElement & {
+async function enterFullscreen(el: HTMLElement) {
+  const node = el as HTMLElement & {
     webkitRequestFullscreen?: () => Promise<void> | void
   }
-  if (el.requestFullscreen) await el.requestFullscreen()
-  else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen()
+  if (node.requestFullscreen) await node.requestFullscreen()
+  else if (node.webkitRequestFullscreen) await node.webkitRequestFullscreen()
 }
 
 async function exitFullscreen() {
@@ -33,26 +34,48 @@ export function Shell() {
   const activeChapter = slides[activeIndex]?.chapter
   const [fullscreen, setFullscreen] = useState(false)
 
+  useViewportHeight()
+
+  const activeIndexRef = useRef(activeIndex)
+  activeIndexRef.current = activeIndex
+  const goToRef = useRef(goTo)
+  goToRef.current = goTo
+
   const chapterStarts = CHAPTERS.map((ch) => ({
     ...ch,
     index: slides.findIndex((s) => s.chapter === ch.id && s.layout === 'divider'),
   }))
 
   useEffect(() => {
-    const sync = () => setFullscreen(Boolean(getFullscreenElement()))
-    sync()
+    const sync = () => {
+      const active = Boolean(getFullscreenElement())
+      setFullscreen(active)
+      document.documentElement.toggleAttribute('data-fullscreen', active)
+      // Force layout + WebGL canvases to remeasure the new viewport.
+      window.dispatchEvent(new Event('resize'))
+      // Re-snap after slide heights recompute for the new canvas.
+      requestAnimationFrame(() => {
+        goToRef.current(activeIndexRef.current, 'auto')
+      })
+    }
+    setFullscreen(Boolean(getFullscreenElement()))
     document.addEventListener('fullscreenchange', sync)
     document.addEventListener('webkitfullscreenchange', sync)
     return () => {
       document.removeEventListener('fullscreenchange', sync)
       document.removeEventListener('webkitfullscreenchange', sync)
+      document.documentElement.removeAttribute('data-fullscreen')
     }
   }, [])
 
   const toggleFullscreen = useCallback(async () => {
     try {
-      if (getFullscreenElement()) await exitFullscreen()
-      else await enterFullscreen()
+      if (getFullscreenElement()) {
+        await exitFullscreen()
+        return
+      }
+      // Fullscreen the document so fixed chrome (TOC / progress) stays available.
+      await enterFullscreen(document.documentElement)
     } catch {
       // User gesture / browser policy can reject — leave UI unchanged.
     }
@@ -75,6 +98,25 @@ export function Shell() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [toggleFullscreen])
+
+  // Keep the active slide filling the canvas if the window is resized
+  // while already presenting (monitor changes, browser UI, etc.).
+  useEffect(() => {
+    let timer = 0
+    const onResize = () => {
+      window.clearTimeout(timer)
+      timer = window.setTimeout(() => {
+        goToRef.current(activeIndexRef.current, 'auto')
+      }, 80)
+    }
+    window.addEventListener('resize', onResize)
+    window.visualViewport?.addEventListener('resize', onResize)
+    return () => {
+      window.clearTimeout(timer)
+      window.removeEventListener('resize', onResize)
+      window.visualViewport?.removeEventListener('resize', onResize)
+    }
+  }, [])
 
   return (
     <NavContext.Provider value={goTo}>

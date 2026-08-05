@@ -44,7 +44,12 @@ export interface Slide {
   table?: { headers: string[]; rows: string[][] }
   image?: { src: string; alt: string; fit?: 'cover' | 'contain' }
   figures?: { src: string; alt: string; caption?: string }[]
-  slideshow?: { src: string; alt: string }[]
+  slideshow?: {
+    src: string
+    alt: string
+    /** Push the frame down (e.g. '8%') — scales to fit remaining space, no top crop. */
+    offsetTop?: string
+  }[]
   formula?: { expression: string; sites: { label: string; name: string }[] }
   meta?: string
   ghostNum?: string
@@ -248,8 +253,9 @@ export const slides: Slide[] = [
         alt: 'Garnet crystal seated in pale opaline host rock',
       },
       {
-        src: asset('images/slideshow-macro-coat.jpg'),
-        alt: 'Close macro of metallic coating on garnet facets',
+        src: asset('images/coated-garnet-hero.jpg'),
+        alt: 'Coated garnet 1 — dark metallic crystal in light host rock',
+        offsetTop: '9%',
       },
       {
         src: asset('images/slideshow-garnet-2.jpg'),

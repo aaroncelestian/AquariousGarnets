@@ -22,6 +22,14 @@
   pointer-events: none;
 }
 
+/* Nudge frame down: keep top of photo visible; fit into the remaining height. */
+.slideshowImg[data-offset='true'] {
+  top: var(--slideshow-offset-top, 0);
+  height: auto;
+  bottom: 0;
+  object-position: center top;
+}
+
 .slideshowImg[data-active='true'] {
   opacity: 1;
 }
@@ -73,15 +81,18 @@
 .locality {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  height: 100%;
   min-height: 0;
-  padding-left: 4px;
+  padding: 4px 4px 8px;
+  box-sizing: border-box;
 }
 
 .mapFrame {
   flex: 1 1 auto;
   min-height: 0;
-  height: min(42vh, 360px);
+  /* Cap against the live app height so fullscreen reflows correctly */
+  max-height: calc(var(--app-height, 100dvh) * 0.42);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -191,10 +202,20 @@
 .elevChart {
   width: 100%;
   height: auto;
-  max-height: 240px;
+  max-height: min(240px, calc(var(--app-height, 100dvh) * 0.28));
   display: block;
   color: var(--color-text);
   flex: 0 0 auto;
+  overflow: visible;
+  margin-bottom: 4px;
+}
+
+:global(html[data-fullscreen]) .mapFrame {
+  max-height: calc(var(--app-height, 100dvh) * 0.48);
+}
+
+:global(html[data-fullscreen]) .elevChart {
+  max-height: min(280px, calc(var(--app-height, 100dvh) * 0.3));
 }
 
 .chart {
