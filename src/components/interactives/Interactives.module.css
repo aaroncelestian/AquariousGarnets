@@ -317,6 +317,102 @@
   justify-content: center;
 }
 
+.libsBlast {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  z-index: 2;
+}
+
+.libsBlastStage {
+  position: absolute;
+  /* Deep bleed into copy + past the column so wire + atoms aren’t clipped */
+  inset: auto;
+  left: calc(-1 * min(46vw, 560px));
+  right: calc(-1 * min(22vw, 260px));
+  top: calc(-1 * min(22vh, 180px));
+  bottom: calc(-1 * min(12vh, 100px));
+  width: auto;
+  height: auto;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.libsBlastScene {
+  width: 100% !important;
+  height: 100% !important;
+  overflow: visible !important;
+  pointer-events: auto;
+}
+
+.libsBlastScene > div {
+  overflow: visible !important;
+}
+
+.libsBlastChrome {
+  position: absolute;
+  left: clamp(12px, 2vw, 24px);
+  bottom: clamp(12px, 2.5vh, 28px);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  max-width: min(42ch, 90%);
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--color-bg) 92%, transparent);
+  backdrop-filter: blur(12px);
+  border: 1px solid color-mix(in srgb, var(--color-divider) 70%, transparent);
+  pointer-events: auto;
+}
+
+.libsBlastCaption {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--color-text) 68%, transparent);
+}
+
+.libsBlastCaption[data-live='true'] {
+  color: color-mix(in srgb, var(--color-text) 88%, transparent);
+}
+
+.libsChip {
+  min-width: 1.5em;
+  padding: 2px 6px;
+  border: 1.5px solid var(--color-accent);
+  background: color-mix(in srgb, var(--color-bg) 92%, transparent);
+  color: var(--color-accent);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.libsHeadTag {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: color-mix(in srgb, var(--color-text) 55%, transparent);
+  transform: translateY(-50%);
+}
+
+.libsDepthTag {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--color-accent);
+  white-space: nowrap;
+  padding: 2px 0;
+}
+
 .libsScene {
   display: flex;
   flex-direction: column;
@@ -351,117 +447,11 @@
   flex: 0 0 auto;
 }
 
-.libsCamera {
-  transition: transform 0.95s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.libsFarCrystal {
-  transition: opacity 0.6s ease;
-}
-
-.libsStack {
-  transition: opacity 0.55s ease 0.15s;
-}
-
-.libsLayer {
-  transition: transform 0.75s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.libsBeam {
-  transition: opacity 0.2s ease;
-  pointer-events: none;
-}
-
-.libsBeam line {
-  transition: opacity 0.35s ease, stroke-width 0.35s ease;
-}
-
-.libsBeam[data-fired='true'] line:first-child {
-  opacity: 0.95;
-  stroke-width: 3.5;
-}
-
-.libsPlasma {
-  opacity: 0;
-  transform-box: fill-box;
-  transform-origin: center;
-}
-
-.libsPlasma[data-fired='true'] {
-  animation: libsPlasmaPop 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-}
-
-.libsPlasma[data-fired='settled'] {
-  opacity: 0.45;
-}
-
-.libsEjecta {
-  opacity: 0;
-  stroke-dasharray: 40;
-  stroke-dashoffset: 40;
-}
-
-.libsPlasma[data-fired='true'] .libsEjecta {
-  animation: libsEjecta 0.7s ease-out forwards;
-}
-
-.libsElements {
-  pointer-events: none;
-}
-
-.libsElement {
-  opacity: 0;
-  transform-box: fill-box;
-  transform-origin: center;
-}
-
-.libsElements[data-fired='true'] .libsElement {
-  animation: libsElementOut 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-  animation-delay: calc(var(--i, 0) * 35ms);
-}
-
-@keyframes libsPlasmaPop {
-  0% {
-    opacity: 0;
-    transform: scale(0.2);
-  }
-  25% {
-    opacity: 1;
-    transform: scale(1.15);
-  }
-  100% {
-    opacity: 0.55;
-    transform: scale(1);
-  }
-}
-
-@keyframes libsEjecta {
-  0% {
-    opacity: 0;
-    stroke-dashoffset: 40;
-  }
-  30% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    stroke-dashoffset: 0;
-  }
-}
-
-@keyframes libsElementOut {
-  0% {
-    opacity: 0;
-    transform: scale(0.4);
-  }
-  35% {
-    opacity: 1;
-    transform: scale(1.08);
-  }
-  100% {
-    opacity: 0.92;
-    transform: scale(1);
-  }
+.libsControls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
 }
 
 .ramanMaturity {
@@ -542,13 +532,6 @@
 
 .layer {
   transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.libsControls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 8px;
 }
 
 .stepLabel {
@@ -777,9 +760,10 @@
 }
 
 .libs3dScene {
-  width: calc(100% + 15vw) !important;
-  height: calc(100% + 20vh) !important;
-  transform: translate(-15vw, -20vh);
+  /* Larger transparent WebGL surface — scene scale stays put; only the clip box grows */
+  width: calc(100% + 28vw) !important;
+  height: calc(100% + 32vh) !important;
+  transform: translate(-10%, -20%);
 }
 
 .eddyChrome {
@@ -1340,17 +1324,6 @@
   }
   .ramanZoomStage[data-dim] .ramanZoomImg {
     filter: none;
-  }
-  .libsCamera,
-  .libsLayer,
-  .libsFarCrystal,
-  .libsStack {
-    transition: none !important;
-  }
-  .libsPlasma[data-fired='true'],
-  .libsPlasma[data-fired='true'] .libsEjecta,
-  .libsElements[data-fired='true'] .libsElement {
-    animation: none !important;
   }
   .barCoated,
   .barUncoated { transition: none; }

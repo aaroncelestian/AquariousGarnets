@@ -1,250 +1,419 @@
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react'
+import { Canvas, useFrame } from '@react-three/fiber'
+import { Html, OrbitControls } from '@react-three/drei'
+import * as THREE from 'three'
+import { DodecahedronWire } from '../three/Dodecahedron'
+import { usePrefersReducedMotion } from '../../hooks/useActiveSlide'
 import styles from './Interactives.module.css'
 
-const ELEMENTS = ['C', 'Fe', 'Mn', 'Si', 'Al', 'Ca', 'O', 'Mg', 'Cr', 'Zn']
+/** Schematic suite — nucleon counts are visual, not stoichiometric. */
+const ELEMENTS = [
+  { el: 'C', p: 3, n: 3 },
+  { el: 'O', p: 3, n: 4 },
+  { el: 'Mg', p: 4, n: 4 },
+  { el: 'Al', p: 4, n: 5 },
+  { el: 'Si', p: 4, n: 5 },
+  { el: 'Ca', p: 5, n: 5 },
+  { el: 'Cr', p: 5, n: 6 },
+  { el: 'Mn', p: 5, n: 6 },
+  { el: 'Fe', p: 6, n: 6 },
+  { el: 'Zn', p: 6, n: 7 },
+] as const
 
-/** Impact on the coating top face (crystal group at translate(140 150)). */
-const IMPACT = { x: 270, y: 186 }
+/** Flat-top dodecahedron: pentagonal face parallel to XZ. */
+const FLAT_X = Math.atan(1 / ((1 + Math.sqrt(5)) / 2))
 
-export function LibsBlast({ active }: { active: boolean }) {
-  const [fired, setFired] = useState(false)
+const GARNET_R = 1.85
+const GARNET_Y = -0.35
+const FACE_IN = GARNET_R * 0.794654472
+const FACE_Z = 0
+const FACE_Y = GARNET_Y + FACE_IN
+const SURFACE_Y = FACE_Y
+const PLASMA_R = 0.55
+
+const GARNET = '#c4a84a'
+const PROTON = '#ec3013'
+const NEUTRON = '#6e6864'
+
+const LASER_ORIGIN = new THREE.Vector3(2.35, 2.85, 1.15)
+const IMPACT = new THREE.Vector3(0, SURFACE_Y + 0.02, FACE_Z)
+
+type Phase = 'idle' | 'pulse' | 'settled'
+
+function easeOutCubic(t: number) {
+  return 1 - (1 - t) ** 3
+}
+
+function nucleonPositions(count: number, radius: number) {
+  const pts: THREE.Vector3[] = []
+  if (count <= 0) return pts
+  if (count === 1) {
+    pts.push(new THREE.Vector3(0, 0, 0))
+    return pts
+  }
+  // Fibonacci sphere pack — compact little nucleus
+  const golden = Math.PI * (3 - Math.sqrt(5))
+  for (let i = 0; i < count; i++) {
+    const y = 1 - (i / Math.max(1, count - 1)) * 2
+    const r = Math.sqrt(Math.max(0, 1 - y * y))
+    const theta = golden * i
+    pts.push(new THREE.Vector3(Math.cos(theta) * r * radius, y * radius, Math.sin(theta) * r * radius))
+  }
+  return pts
+}
+
+function MiniAtom({
+  symbol,
+  protons,
+  neutrons,
+  spin,
+}: {
+  symbol: string
+  protons: number
+  neutrons: number
+  spin: number
+}) {
+  const group = useRef<THREE.Group>(null)
+  const pPos = useMemo(() => nucleonPositions(protons, 0.055), [protons])
+  const nPos = useMemo(() => nucleonPositions(neutrons, 0.055), [neutrons])
+
+  useFrame((_, dt) => {
+    if (group.current) group.current.rotation.y += dt * spin
+  })
+
+  // Offset neutrons slightly so they interleave with protons
+  const nOffset = useMemo(() => new THREE.Euler(0.4, 0.7, 0.2), [])
+
+  return (
+    <group>
+      <group ref={group} scale={1.15}>
+        {pPos.map((pos, i) => (
+          <mesh key={`p-${i}`} position={pos.toArray()}>
+            <sphereGeometry args={[0.032, 10, 10]} />
+            <meshStandardMaterial
+              color={PROTON}
+              emissive={PROTON}
+              emissiveIntensity={0.35}
+              roughness={0.35}
+              metalness={0.15}
+            />
+          </mesh>
+        ))}
+        <group rotation={nOffset}>
+          {nPos.map((pos, i) => (
+            <mesh key={`n-${i}`} position={pos.toArray()}>
+              <sphereGeometry args={[0.032, 10, 10]} />
+              <meshStandardMaterial color={NEUTRON} roughness={0.55} metalness={0.05} />
+            </mesh>
+          ))}
+        </group>
+        {/* Thin electron shell cue */}
+        <mesh rotation={[Math.PI / 2.6, 0.3, 0]}>
+          <torusGeometry args={[0.13, 0.006, 6, 32]} />
+          <meshBasicMaterial color="#c4a84a" transparent opacity={0.45} />
+        </mesh>
+      </group>
+      <Html position={[0.18, 0.12, 0]} style={{ pointerEvents: 'none' }} zIndexRange={[20, 0]}>
+        <div className={styles.libsChip}>{symbol}</div>
+      </Html>
+    </group>
+  )
+}
+
+function AtomCloud({
+  atomRefs,
+}: {
+  atomRefs: MutableRefObject<(THREE.Group | null)[]>
+}) {
+  return (
+    <group>
+      {ELEMENTS.map((e, i) => (
+        <group
+          key={e.el}
+          ref={(node) => {
+            atomRefs.current[i] = node
+          }}
+          position={[IMPACT.x, IMPACT.y, IMPACT.z]}
+          visible={false}
+        >
+          <MiniAtom symbol={e.el} protons={e.p} neutrons={e.n} spin={0.6 + (i % 3) * 0.25} />
+        </group>
+      ))}
+    </group>
+  )
+}
+
+function Scene({
+  phase,
+  reduced,
+  active,
+  fireKey,
+}: {
+  phase: Phase
+  reduced: boolean
+  active: boolean
+  fireKey: number
+}) {
+  const root = useRef<THREE.Group>(null)
+  const plasmaRef = useRef<THREE.Mesh>(null)
+  const plasmaGlowRef = useRef<THREE.Mesh>(null)
+  const beamRef = useRef<THREE.Mesh>(null)
+  const headLight = useRef<THREE.PointLight>(null)
+  const pitRef = useRef<THREE.Mesh>(null)
+  const atomRefs = useRef<(THREE.Group | null)[]>([])
+  const startedAt = useRef<number | null>(null)
+  const targets = useMemo(
+    () =>
+      ELEMENTS.map((_, i) => {
+        const angle = -Math.PI * 0.92 + (i / (ELEMENTS.length - 1)) * Math.PI * 1.05
+        const radius = 1.35 + (i % 3) * 0.14
+        return new THREE.Vector3(
+          Math.cos(angle) * radius,
+          SURFACE_Y + 0.85 + Math.sin(i * 1.7) * 0.22 + (i % 2) * 0.14,
+          Math.sin(angle) * radius * 0.55,
+        )
+      }),
+    [],
+  )
+
+  const beamGeom = useMemo(() => {
+    const dir = IMPACT.clone().sub(LASER_ORIGIN)
+    const len = dir.length()
+    const mid = LASER_ORIGIN.clone().add(IMPACT).multiplyScalar(0.5)
+    const quat = new THREE.Quaternion().setFromUnitVectors(
+      new THREE.Vector3(0, 1, 0),
+      dir.clone().normalize(),
+    )
+    return { len, mid, quat }
+  }, [])
 
   useEffect(() => {
-    if (!active) setFired(false)
+    if (phase === 'idle') {
+      startedAt.current = null
+      return
+    }
+    // Restart the clock only when firing — not when settling (that was a second pulse).
+    if (phase === 'pulse') {
+      startedAt.current = performance.now()
+    }
+  }, [phase, fireKey])
+
+  useFrame((state, dt) => {
+    if (!active) return
+    if (root.current && !reduced) root.current.rotation.y += dt * 0.07
+
+    const pulsing = phase === 'pulse' || phase === 'settled'
+    let t = 0
+    if (pulsing) {
+      if (reduced) t = 1.4
+      else if (startedAt.current != null) t = (performance.now() - startedAt.current) / 1000
+    }
+
+    if (pitRef.current) pitRef.current.visible = pulsing
+
+    if (beamRef.current) {
+      const mat = beamRef.current.material as THREE.MeshBasicMaterial
+      const beamAmt = pulsing && t < 0.55 ? Math.max(0, 1 - t / 0.55) : 0
+      mat.opacity = beamAmt * 0.85
+      beamRef.current.visible = beamAmt > 0.02
+    }
+
+    if (plasmaRef.current && plasmaGlowRef.current) {
+      const mat = plasmaRef.current.material as THREE.MeshBasicMaterial
+      const glowMat = plasmaGlowRef.current.material as THREE.MeshBasicMaterial
+      let intensity = 0
+      let scale = 0.2
+      if (pulsing) {
+        if (t < 0.12) {
+          intensity = t / 0.12
+          scale = 0.25 + intensity * 0.9
+        } else if (t < 1.1 || phase === 'pulse') {
+          intensity = t < 1.1 ? 1 : Math.max(0.55, 1 - (t - 1.1) * 0.35)
+          scale = 1.05 + (reduced ? 0 : Math.sin(state.clock.elapsedTime * 14) * 0.04)
+        }
+        if (phase === 'settled') {
+          intensity = 0.52 + (reduced ? 0 : Math.sin(state.clock.elapsedTime * 3) * 0.04)
+          scale = 0.92
+        }
+      }
+      mat.opacity = intensity * 0.92
+      glowMat.opacity = intensity * 0.35
+      plasmaRef.current.scale.setScalar(scale)
+      plasmaGlowRef.current.scale.setScalar(scale * 1.65)
+      plasmaRef.current.visible = intensity > 0.02
+      plasmaGlowRef.current.visible = intensity > 0.02
+    }
+
+    if (headLight.current) {
+      headLight.current.intensity = pulsing ? 2.4 : 0.15
+    }
+
+    for (let i = 0; i < ELEMENTS.length; i++) {
+      const atom = atomRefs.current[i]
+      if (!atom) continue
+      const delay = i * 0.045
+      const local = pulsing ? Math.max(0, Math.min(1, (t - 0.28 - delay) / 0.4)) : 0
+      const u = easeOutCubic(local)
+      atom.visible = u > 0.02
+      atom.position.set(
+        THREE.MathUtils.lerp(IMPACT.x, targets[i].x, u),
+        THREE.MathUtils.lerp(IMPACT.y, targets[i].y, u),
+        THREE.MathUtils.lerp(IMPACT.z, targets[i].z, u),
+      )
+      atom.scale.setScalar(0.55 + u * 0.55)
+    }
+  })
+
+  return (
+    <>
+      <ambientLight intensity={0.5} />
+      <hemisphereLight args={['#fff4e4', '#b5a078', 0.7]} />
+      <directionalLight position={[4, 5, 3]} intensity={1.05} color="#fff6ea" />
+      <directionalLight position={[-3, 2, -2]} intensity={0.45} color="#ffd9a0" />
+      <pointLight
+        ref={headLight}
+        position={LASER_ORIGIN.toArray()}
+        color="#ffb347"
+        intensity={0.15}
+        distance={8}
+      />
+
+      <group ref={root} position={[-0.15, 0.15, 0]}>
+        <group position={[0, GARNET_Y, 0]} rotation={[FLAT_X, 0, 0]}>
+          <DodecahedronWire scale={GARNET_R * 1.52} opacity={0.32} lineWidth={1.15} />
+          <mesh>
+            <dodecahedronGeometry args={[GARNET_R, 0]} />
+            <meshStandardMaterial
+              color={GARNET}
+              roughness={0.22}
+              metalness={0.94}
+              envMapIntensity={1.1}
+              emissive={GARNET}
+              emissiveIntensity={0.1}
+            />
+          </mesh>
+        </group>
+
+        <mesh
+          ref={pitRef}
+          position={[0, SURFACE_Y + 0.004, FACE_Z]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          visible={false}
+        >
+          <circleGeometry args={[0.14, 24]} />
+          <meshStandardMaterial color="#1a1715" roughness={0.6} metalness={0.3} />
+        </mesh>
+
+        <group position={LASER_ORIGIN.toArray()}>
+          <mesh>
+            <boxGeometry args={[0.42, 0.22, 0.28]} />
+            <meshStandardMaterial color="#3a3533" roughness={0.55} metalness={0.4} />
+          </mesh>
+          <mesh position={[-0.12, 0, 0.02]}>
+            <boxGeometry args={[0.12, 0.12, 0.12]} />
+            <meshStandardMaterial
+              color="#ec3013"
+              emissive="#ec3013"
+              emissiveIntensity={phase === 'idle' ? 0.35 : 1.2}
+              roughness={0.4}
+            />
+          </mesh>
+          <Html position={[0.38, 0.02, 0]} style={{ pointerEvents: 'none' }}>
+            <div className={styles.libsHeadTag}>LIBS</div>
+          </Html>
+        </group>
+
+        <mesh
+          ref={beamRef}
+          position={beamGeom.mid.toArray()}
+          quaternion={beamGeom.quat}
+          visible={false}
+        >
+          <cylinderGeometry args={[0.018, 0.045, beamGeom.len, 8]} />
+          <meshBasicMaterial color="#ffb347" transparent opacity={0} depthWrite={false} />
+        </mesh>
+
+        <mesh ref={plasmaGlowRef} position={IMPACT.toArray()} visible={false}>
+          <sphereGeometry args={[PLASMA_R, 28, 28]} />
+          <meshBasicMaterial color="#ff7a3a" transparent opacity={0} depthWrite={false} />
+        </mesh>
+        <mesh ref={plasmaRef} position={IMPACT.toArray()} visible={false}>
+          <sphereGeometry args={[PLASMA_R, 28, 28]} />
+          <meshBasicMaterial color="#fff0d4" transparent opacity={0} depthWrite={false} />
+        </mesh>
+
+        <AtomCloud atomRefs={atomRefs} />
+
+        {phase !== 'idle' && (
+          <Html position={[0.95, SURFACE_Y - 0.15, 0.55]} style={{ pointerEvents: 'none' }}>
+            <div className={styles.libsDepthTag}>~few µm / pulse</div>
+          </Html>
+        )}
+      </group>
+
+      <OrbitControls enablePan={false} enableZoom={false} target={[-0.15, FACE_Y + 0.2, 0]} />
+    </>
+  )
+}
+
+export function LibsBlast({ active }: { active: boolean }) {
+  const reduced = usePrefersReducedMotion()
+  const [phase, setPhase] = useState<Phase>('idle')
+  const [fireKey, setFireKey] = useState(0)
+  const settleTimer = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (!active) {
+      setPhase('idle')
+      if (settleTimer.current) window.clearTimeout(settleTimer.current)
+    }
   }, [active])
 
   const fire = () => {
-    setFired(false)
-    // retrigger CSS animations
-    requestAnimationFrame(() => setFired(true))
+    if (settleTimer.current) window.clearTimeout(settleTimer.current)
+    setFireKey((k) => k + 1)
+    if (reduced) {
+      setPhase('settled')
+      return
+    }
+    setPhase('pulse')
+    settleTimer.current = window.setTimeout(() => setPhase('settled'), 1600)
   }
 
+  const caption =
+    phase === 'idle'
+      ? 'Fire once — watch the plasma, then the atoms emerge.'
+      : phase === 'pulse'
+        ? 'Plasma flash: atoms from the surface — protons + neutrons.'
+        : 'Near-full suite from a few micrometers of surface.'
+
   return (
-    <div className={styles.libsScene}>
-      <svg
-        className={styles.chart}
-        viewBox="0 0 560 360"
-        role="img"
-        aria-label="Laser-induced breakdown spectroscopy: a pulsed laser ablates the surface and reads a near-complete elemental suite from the plasma"
-      >
-        <defs>
-          <linearGradient id="libsCrystal" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#3a3533" />
-            <stop offset="55%" stopColor="#1f1c1b" />
-            <stop offset="100%" stopColor="#121010" />
-          </linearGradient>
-          <linearGradient id="libsCoat" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#5a6b4a" />
-            <stop offset="100%" stopColor="#2f3a28" />
-          </linearGradient>
-          <radialGradient id="libsPlasma" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#fff6e8" stopOpacity="1" />
-            <stop offset="35%" stopColor="#ffb347" stopOpacity="0.95" />
-            <stop offset="70%" stopColor="var(--color-accent)" stopOpacity="0.7" />
-            <stop offset="100%" stopColor="var(--color-accent)" stopOpacity="0" />
-          </radialGradient>
-          <filter id="libsGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="4" result="b" />
-            <feMerge>
-              <feMergeNode in="b" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
-        {/* Workbench shadow */}
-        <ellipse cx="280" cy="318" rx="160" ry="14" fill="currentColor" opacity="0.08" />
-
-        {/* Crystal body */}
-        <g transform="translate(140 150)">
-          <path
-            d="M40 20 L220 20 L250 55 L220 140 L40 140 L10 55 Z"
-            fill="url(#libsCrystal)"
-          />
-          {/* Specular facet */}
-          <path
-            d="M40 20 L120 20 L100 55 L10 55 Z"
-            fill="#fff"
-            opacity="0.08"
-          />
-          {/* Coating film — exaggerated for visibility */}
-          <path
-            d="M40 20 L220 20 L250 55 L220 68 L40 68 L10 55 Z"
-            fill="url(#libsCoat)"
-            opacity="0.92"
-          />
-          <text
-            x="130"
-            y="110"
-            textAnchor="middle"
-            fontSize="13"
-            fill="#f3f2f2"
-            opacity="0.7"
-          >
-            coated garnet
-          </text>
-        </g>
-
-        {/* Scale callout — µm, not nm: LIBS ablates a microscopic pit */}
-        <g transform="translate(28 248)">
-          <rect
-            width="132"
-            height="64"
-            fill="color-mix(in srgb, var(--color-bg) 88%, transparent)"
-            stroke="var(--color-divider)"
-            strokeWidth="1"
-          />
-          <text x="12" y="22" fontSize="11" className={styles.label} fill="currentColor">
-            Sampling depth
-          </text>
-          <line
-            x1="12"
-            y1="36"
-            x2="100"
-            y2="36"
-            stroke="var(--color-accent)"
-            strokeWidth="2.5"
-          />
-          <line x1="12" y1="30" x2="12" y2="42" stroke="var(--color-accent)" strokeWidth="2" />
-          <line x1="100" y1="30" x2="100" y2="42" stroke="var(--color-accent)" strokeWidth="2" />
-          <text x="12" y="56" fontSize="12" fill="var(--color-accent)" fontWeight="700">
-            ~few μm / pulse
-          </text>
-        </g>
-
-        {/* Element suite callout */}
-        <g transform="translate(400 248)">
-          <rect
-            width="140"
-            height="64"
-            fill="color-mix(in srgb, var(--color-bg) 88%, transparent)"
-            stroke="var(--color-divider)"
-            strokeWidth="1"
-          />
-          <text x="12" y="22" fontSize="11" className={styles.label} fill="currentColor">
-            Near-full suite
-          </text>
-          <text x="12" y="44" fontSize="12" fill="currentColor" opacity="0.65">
-            light → heavy
-          </text>
-          <text x="12" y="58" fontSize="11" fill="var(--color-accent)">
-            in one plasma flash
-          </text>
-        </g>
-
-        {/* Laser housing */}
-        <g transform="translate(390 36)">
-          <rect
-            x="0"
-            y="0"
-            width="72"
-            height="28"
-            fill="var(--color-neutral-700)"
-          />
-          <rect x="8" y="6" width="16" height="16" fill="var(--color-accent)" opacity="0.85" />
-          <text x="36" y="18" fontSize="10" fill="#f3f2f2" opacity="0.8">
-            LIBS
-          </text>
-        </g>
-
-        {/* Beam — only after fire */}
-        <g
-          className={styles.libsBeam}
-          data-fired={fired ? 'true' : undefined}
-          opacity={fired ? 1 : 0}
+    <div className={styles.libsBlast}>
+      <div className={styles.libsBlastStage}>
+        <Canvas
+          className={styles.libsBlastScene}
+          dpr={[1, 1.6]}
+          camera={{ position: [2.6, 2.1, 6.8], fov: 36 }}
+          gl={{
+            antialias: true,
+            alpha: true,
+            toneMapping: THREE.ACESFilmicToneMapping,
+            toneMappingExposure: 1.08,
+          }}
+          style={{ width: '100%', height: '100%', overflow: 'visible' }}
         >
-          <line
-            x1="420"
-            y1="64"
-            x2={IMPACT.x}
-            y2={IMPACT.y}
-            stroke="var(--color-accent)"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            opacity="0.9"
-          />
-          <line
-            x1="420"
-            y1="64"
-            x2={IMPACT.x}
-            y2={IMPACT.y}
-            stroke="#fff"
-            strokeWidth="1"
-            strokeLinecap="round"
-            opacity="0.7"
-          />
-        </g>
+          <Suspense fallback={null}>
+            <Scene phase={phase} reduced={reduced} active={active} fireKey={fireKey} />
+          </Suspense>
+        </Canvas>
+      </div>
 
-        {/* Impact / plasma — outer SVG translate kept separate from CSS scale */}
-        <g transform={`translate(${IMPACT.x} ${IMPACT.y})`} filter="url(#libsGlow)">
-          <g
-            className={styles.libsPlasma}
-            data-fired={fired ? 'true' : undefined}
-          >
-            <circle r="22" fill="url(#libsPlasma)" />
-            <circle r="5" fill="#fff" opacity="0.95" />
-            {[
-              [-24, -18],
-              [-10, -28],
-              [8, -26],
-              [22, -14],
-              [-20, 8],
-              [22, 6],
-            ].map(([x, y], i) => (
-              <line
-                key={i}
-                className={styles.libsEjecta}
-                x1="0"
-                y1="0"
-                x2={x}
-                y2={y}
-                stroke="#ffd39a"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            ))}
-          </g>
-        </g>
-
-        {/* Flying element chips */}
-        <g className={styles.libsElements} data-fired={fired ? 'true' : undefined}>
-          {ELEMENTS.map((el, i) => {
-            const angle = -110 + i * 18
-            const rad = (angle * Math.PI) / 180
-            const dist = 70 + (i % 3) * 18
-            const x = IMPACT.x + Math.cos(rad) * dist
-            const y = IMPACT.y + Math.sin(rad) * dist * 0.75
-            return (
-              <g key={el} transform={`translate(${x} ${y})`}>
-                <g
-                  className={styles.libsElement}
-                  style={{ ['--i' as string]: String(i) }}
-                >
-                  <circle
-                    r="11"
-                    fill="var(--color-bg)"
-                    stroke="var(--color-accent)"
-                    strokeWidth="1.5"
-                  />
-                  <text
-                    textAnchor="middle"
-                    y="4"
-                    fontSize="10"
-                    fontWeight="700"
-                    fill="var(--color-accent)"
-                  >
-                    {el}
-                  </text>
-                </g>
-              </g>
-            )
-          })}
-        </g>
-      </svg>
-
-      <div className={styles.libsControls}>
+      <div className={styles.libsBlastChrome}>
+        <p className={styles.libsBlastCaption} data-live={phase !== 'idle' ? 'true' : undefined}>
+          {caption}
+        </p>
         <button type="button" className="btn btn-primary" onClick={fire}>
-          Fire laser pulse
+          {phase === 'idle' ? 'Fire laser pulse' : 'Fire again ↻'}
         </button>
       </div>
     </div>

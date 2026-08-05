@@ -17,7 +17,7 @@ const BEATS = [
     craterOrg: 0,
     craterHem: 0,
     pit: 0,
-    camZ: 8.2,
+    camZ: 8.9,
   },
   {
     label: 'Pulse',
@@ -28,7 +28,7 @@ const BEATS = [
     craterOrg: 0.62,
     craterHem: 0.32,
     pit: 0.26,
-    camZ: 7.2,
+    camZ: 7.8,
   },
   {
     label: 'Carbon lifts',
@@ -39,7 +39,7 @@ const BEATS = [
     craterOrg: 0.68,
     craterHem: 0.34,
     pit: 0.28,
-    camZ: 7.6,
+    camZ: 8.2,
   },
   {
     label: 'Garnet exposed',
@@ -50,7 +50,7 @@ const BEATS = [
     craterOrg: 0.7,
     craterHem: 0.4,
     pit: 0.3,
-    camZ: 8.0,
+    camZ: 8.6,
   },
 ] as const
 

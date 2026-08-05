@@ -424,9 +424,10 @@ export const slides: Slide[] = [
     layout: 'split',
     kicker: '03 · The Receipt',
     title: 'A laser reads the surface',
-    body: 'LIBS ablates a microscopic pit — only a few micrometers deep — and the plasma flash reports a near-complete elemental suite in one shot.',
+    body: 'A pulsed laser sparks a plasma cloud on the surface. From that flash: atoms from a near-complete elemental suite — light to heavy — sampled only a few micrometers deep.',
     interactive: 'libs-blast',
-    notes: 'Fire the pulse once for the room. Emphasize surface + elements, not depth math.',
+    notes:
+      'Fire once. Hold on the plasma, then the little atoms (protons red, neutrons grey). Depth is the aside — suite is the point. Peel comes next.',
   },
   {
     id: 'libs',
@@ -570,8 +571,8 @@ export const slides: Slide[] = [
       'Field verification of the mafic fluid source. Molecular tests for biomarkers. The full series lives on Substack.',
     meta: 'aaroncelestian.substack.com',
     image: {
-      src: asset('images/garnet-vein.jpg'),
-      alt: 'Metallic crystals in a vein through volcanic rock',
+      src: asset('images/best-garnet.jpg'),
+      alt: 'Metallic black garnet crystal in light matrix with a bright specular facet',
     },
   },
 ]

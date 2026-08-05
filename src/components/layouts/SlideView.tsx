@@ -4,7 +4,6 @@ import type { Slide } from '../../data/slides'
 import { usePrefersReducedMotion } from '../../hooks/useActiveSlide'
 import { LocalityMap } from '../interactives/LocalityMap'
 import { XrfChart } from '../interactives/XrfChart'
-import { LibsBlast } from '../interactives/LibsBlast'
 import { LibsPeel } from '../interactives/LibsPeel'
 import { CnRatio } from '../interactives/CnRatio'
 import { RamanMaturity } from '../interactives/RamanMaturity'
@@ -18,6 +17,9 @@ const CrystalViewer = lazy(() =>
 )
 const EddyField = lazy(() =>
   import('../interactives/EddyField').then((m) => ({ default: m.EddyField })),
+)
+const LibsBlast = lazy(() =>
+  import('../interactives/LibsBlast').then((m) => ({ default: m.LibsBlast })),
 )
 const LibsStack3D = lazy(() =>
   import('../interactives/LibsStack3D').then((m) => ({ default: m.LibsStack3D })),
@@ -152,7 +154,11 @@ function Interactive({
     case 'xrf-chart':
       return <XrfChart active={active} />
     case 'libs-blast':
-      return <LibsBlast active={active} />
+      return (
+        <Suspense fallback={<div style={{ height: '100%' }} />}>
+          <LibsBlast active={active} />
+        </Suspense>
+      )
     case 'libs-peel':
       return <LibsPeel active={active} />
     case 'libs-stack-3d':

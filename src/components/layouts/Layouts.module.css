@@ -491,6 +491,7 @@
   gap: clamp(32px, 5vw, 80px);
   align-items: center;
   min-height: 0;
+  overflow: visible;
 }
 
 .splitFlip {
@@ -503,11 +504,11 @@
 .splitFlip .splitInteractive {
   position: relative;
   z-index: 1;
-  /* Bleed into slide padding so the canvas isn’t a tight clip box */
+  /* Bleed past slide padding + into the copy column so the ghost wire has room */
   margin-left: calc(-1 * var(--pad-x));
   margin-top: calc(-1 * var(--pad-y));
   margin-bottom: calc(-1 * var(--pad-y));
-  width: calc(100% + var(--pad-x) + min(32vw, 360px));
+  width: calc(100% + var(--pad-x) + min(48vw, 560px));
   height: calc(100% + 2 * var(--pad-y));
   min-height: 0;
   max-height: none;
@@ -527,6 +528,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  position: relative;
+  z-index: 1;
 }
 
 .splitCopy .body {
@@ -548,6 +551,8 @@
 .splitInteractive {
   height: min(78vh, 700px);
   min-height: 420px;
+  position: relative;
+  overflow: visible;
 }
 
 .stage {
