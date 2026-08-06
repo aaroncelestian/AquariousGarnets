@@ -567,6 +567,20 @@ export const slides: Slide[] = [
     title: "What's Next",
   },
   {
+    id: 'next-steps',
+    label: 'Next steps',
+    chapter: 'next',
+    layout: 'content',
+    kicker: "04 · What's Next",
+    title: 'What comes next',
+    bullets: [
+      'Sample the cliff in place, not just float — look for stratigraphic control on the doped-garnet horizon',
+      'XRF zoning maps on individual garnets — core-to-rim Cr/Sc/Zn',
+      'Ionic-liquid-preserved fresh samples for direct SEM imaging of any surviving cells',
+      'Better constrain thermal regime (D:G ratio) to pin down thermophile vs. mesophile',
+    ],
+  },
+  {
     id: 'close',
     label: 'Close',
     chapter: 'next',
@@ -574,7 +588,7 @@ export const slides: Slide[] = [
     kicker: 'Pocketful of Xtals',
     displayTitle: 'The Question\nIs Still Open',
     subtitle:
-      'Field verification of the mafic fluid source. Molecular tests for biomarkers. The full series lives on Substack.',
+      'The full investigation — spectra, field notes, and every open thread — lives on Pocketful of Xtals.',
     meta: 'aaroncelestian.substack.com',
     image: {
       src: asset('images/best-garnet.jpg'),
