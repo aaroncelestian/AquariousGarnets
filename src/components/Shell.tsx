@@ -3,12 +3,7 @@ import { slides, CHAPTERS } from '../data/slides'
 import { useActiveSlide } from '../hooks/useActiveSlide'
 import { useViewportHeight } from '../hooks/useViewportHeight'
 import { NavContext } from '../hooks/useSlideNav'
-import {
-  exitPresentHref,
-  fillScreen,
-  isPresentMode,
-  openPresentWindow,
-} from '../lib/presentWindow'
+import { exitPresentHref, fillScreen, isPresentMode } from '../lib/presentWindow'
 import { SlideView } from './layouts/SlideView'
 import styles from './Shell.module.css'
 
@@ -17,11 +12,21 @@ function applyPresentAttr(active: boolean) {
   document.documentElement.toggleAttribute('data-fullscreen', active)
 }
 
+function isTypingTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) return false
+  const tag = target.tagName
+  return (
+    tag === 'INPUT' ||
+    tag === 'TEXTAREA' ||
+    tag === 'SELECT' ||
+    target.isContentEditable
+  )
+}
+
 export function Shell() {
   const { containerRef, activeIndex, goTo } = useActiveSlide(slides.length)
   const activeChapter = slides[activeIndex]?.chapter
   const [present, setPresent] = useState(() => isPresentMode())
-  const presentWinRef = useRef<Window | null>(null)
 
   useViewportHeight()
 
@@ -46,7 +51,7 @@ export function Shell() {
     }
   }, [present])
 
-  const enterInPlacePresent = useCallback(() => {
+  const enterPresent = useCallback(() => {
     const url = new URL(window.location.href)
     url.searchParams.set('present', '1')
     url.searchParams.set('slide', String(activeIndexRef.current + 1))
@@ -55,72 +60,35 @@ export function Shell() {
     setPresent(true)
   }, [])
 
-  const exitInPlacePresent = useCallback(() => {
+  const exitPresent = useCallback(() => {
     window.history.replaceState(null, '', exitPresentHref())
     setPresent(false)
   }, [])
 
   const togglePresent = useCallback(() => {
-    if (isPresentMode()) {
-      if (window.opener && !window.opener.closed) {
-        window.close()
-        return
-      }
-      exitInPlacePresent()
-      return
-    }
-
-    const existing = presentWinRef.current
-    if (existing && !existing.closed) {
-      existing.close()
-      presentWinRef.current = null
-      return
-    }
-
-    const win = openPresentWindow(activeIndexRef.current)
-    if (win) {
-      presentWinRef.current = win
-      return
-    }
-
-    // Popup blocked — stay in this window so Zoom's share surface does not change.
-    enterInPlacePresent()
-  }, [enterInPlacePresent, exitInPlacePresent])
+    if (isPresentMode() || present) exitPresent()
+    else enterPresent()
+  }, [enterPresent, exitPresent, present])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.metaKey || e.ctrlKey || e.altKey) return
-      const tag = (e.target as HTMLElement)?.tagName
-      const editable =
-        tag === 'INPUT' ||
-        tag === 'TEXTAREA' ||
-        tag === 'SELECT' ||
-        (e.target as HTMLElement)?.isContentEditable
-      if (editable) return
+      if (e.metaKey || e.ctrlKey || e.altKey || e.repeat) return
+      if (isTypingTarget(e.target)) return
 
+      const presentKey = e.code === 'KeyP' || e.key === 'p' || e.key === 'P'
       if (e.key === 'Escape' && (isPresentMode() || present)) {
         e.preventDefault()
-        togglePresent()
+        exitPresent()
         return
       }
-
-      if (e.key !== 'p' && e.key !== 'P') return
+      if (!presentKey) return
       e.preventDefault()
       togglePresent()
     }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [present, togglePresent])
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
+  }, [exitPresent, present, togglePresent])
 
-  useEffect(() => {
-    return () => {
-      const win = presentWinRef.current
-      if (win && !win.closed) win.close()
-    }
-  }, [])
-
-  // Keep the active slide filling the canvas if the window is resized
-  // while already presenting (monitor changes, browser UI, etc.).
   useEffect(() => {
     let timer = 0
     const onResize = () => {
@@ -199,7 +167,7 @@ export function Shell() {
             onClick={() => togglePresent()}
             aria-pressed={false}
             aria-label="Present"
-            title="Present in a chrome-less window (P) — share that window in Zoom"
+            title="Present chrome-less in this window (P) — share this window in Zoom"
           >
             Present
           </button>
