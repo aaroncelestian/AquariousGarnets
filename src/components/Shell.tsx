@@ -3,7 +3,7 @@ import { slides, CHAPTERS } from '../data/slides'
 import { useActiveSlide } from '../hooks/useActiveSlide'
 import { useViewportHeight } from '../hooks/useViewportHeight'
 import { NavContext } from '../hooks/useSlideNav'
-import { exitPresentHref, fillScreen, isPresentMode } from '../lib/presentWindow'
+import { isPresentMode, presentHref } from '../lib/presentWindow'
 import { SlideView } from './layouts/SlideView'
 import styles from './Shell.module.css'
 
@@ -27,6 +27,8 @@ export function Shell() {
   const { containerRef, activeIndex, goTo } = useActiveSlide(slides.length)
   const activeChapter = slides[activeIndex]?.chapter
   const [present, setPresent] = useState(() => isPresentMode())
+  const presentRef = useRef(present)
+  presentRef.current = present
 
   useViewportHeight()
 
@@ -40,54 +42,40 @@ export function Shell() {
     index: slides.findIndex((s) => s.chapter === ch.id && s.layout === 'divider'),
   }))
 
-  useEffect(() => {
-    applyPresentAttr(present)
-    window.dispatchEvent(new Event('resize'))
+  const setPresentMode = useCallback((on: boolean) => {
+    presentRef.current = on
+    applyPresentAttr(on)
+    window.history.replaceState(null, '', presentHref(on, activeIndexRef.current))
+    setPresent(on)
     requestAnimationFrame(() => {
       goToRef.current(activeIndexRef.current, 'auto')
     })
-    return () => {
-      if (!isPresentMode()) applyPresentAttr(false)
-    }
+  }, [])
+
+  useEffect(() => {
+    applyPresentAttr(present)
   }, [present])
-
-  const enterPresent = useCallback(() => {
-    const url = new URL(window.location.href)
-    url.searchParams.set('present', '1')
-    url.searchParams.set('slide', String(activeIndexRef.current + 1))
-    window.history.replaceState(null, '', url.toString())
-    fillScreen(window)
-    setPresent(true)
-  }, [])
-
-  const exitPresent = useCallback(() => {
-    window.history.replaceState(null, '', exitPresentHref())
-    setPresent(false)
-  }, [])
-
-  const togglePresent = useCallback(() => {
-    if (isPresentMode() || present) exitPresent()
-    else enterPresent()
-  }, [enterPresent, exitPresent, present])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey || e.repeat) return
       if (isTypingTarget(e.target)) return
 
-      const presentKey = e.code === 'KeyP' || e.key === 'p' || e.key === 'P'
-      if (e.key === 'Escape' && (isPresentMode() || present)) {
+      if (e.key === 'Escape' && presentRef.current) {
         e.preventDefault()
-        exitPresent()
+        e.stopPropagation()
+        setPresentMode(false)
         return
       }
-      if (!presentKey) return
+
+      if (e.code !== 'KeyP' && e.key !== 'p' && e.key !== 'P') return
       e.preventDefault()
-      togglePresent()
+      e.stopPropagation()
+      setPresentMode(!presentRef.current)
     }
     window.addEventListener('keydown', onKey, true)
     return () => window.removeEventListener('keydown', onKey, true)
-  }, [exitPresent, present, togglePresent])
+  }, [setPresentMode])
 
   useEffect(() => {
     let timer = 0
@@ -124,45 +112,39 @@ export function Shell() {
         ))}
       </div>
 
-      {!present && (
-        <>
-          <nav className={styles.nav} aria-label="Slide progress">
-            {slides.map((s, i) => (
-              <button
-                key={s.id}
-                type="button"
-                className={styles.dot}
-                data-active={i === activeIndex}
-                aria-label={`Go to ${s.label}`}
-                aria-current={i === activeIndex ? 'true' : undefined}
-                onClick={() => goTo(i)}
-              />
-            ))}
-          </nav>
+      <nav className={styles.nav} aria-label="Slide progress" hidden={present}>
+        {slides.map((s, i) => (
+          <button
+            key={s.id}
+            type="button"
+            className={styles.dot}
+            data-active={i === activeIndex}
+            aria-label={`Go to ${s.label}`}
+            aria-current={i === activeIndex ? 'true' : undefined}
+            onClick={() => goTo(i)}
+          />
+        ))}
+      </nav>
 
-          <nav className={styles.toc} aria-label="Chapters">
-            {chapterStarts.map((ch) => (
-              <button
-                key={ch.id}
-                type="button"
-                className={styles.tocBtn}
-                data-active={activeChapter === ch.id}
-                onClick={() => goTo(Math.max(0, ch.index))}
-              >
-                {ch.num} {ch.title}
-              </button>
-            ))}
-          </nav>
-        </>
-      )}
+      <nav className={styles.toc} aria-label="Chapters" hidden={present}>
+        {chapterStarts.map((ch) => (
+          <button
+            key={ch.id}
+            type="button"
+            className={styles.tocBtn}
+            data-active={activeChapter === ch.id}
+            onClick={() => goTo(Math.max(0, ch.index))}
+          >
+            {ch.num} {ch.title}
+          </button>
+        ))}
+      </nav>
 
-      {!present && (
-        <div className={styles.chrome}>
-          <div className={styles.counter} aria-live="polite">
-            {activeIndex + 1} / {slides.length}
-          </div>
+      <div className={styles.chrome} hidden={present}>
+        <div className={styles.counter} aria-live="polite">
+          {activeIndex + 1} / {slides.length}
         </div>
-      )}
+      </div>
     </NavContext.Provider>
   )
 }
