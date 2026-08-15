@@ -161,16 +161,6 @@ export function Shell() {
           <div className={styles.counter} aria-live="polite">
             {activeIndex + 1} / {slides.length}
           </div>
-          <button
-            type="button"
-            className={styles.fullscreenBtn}
-            onClick={() => togglePresent()}
-            aria-pressed={false}
-            aria-label="Present"
-            title="Present chrome-less in this window (P) — share this window in Zoom"
-          >
-            Present
-          </button>
         </div>
       )}
     </NavContext.Provider>
