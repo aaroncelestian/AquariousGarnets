@@ -3,7 +3,7 @@ import { slides, CHAPTERS } from '../data/slides'
 import { useActiveSlide } from '../hooks/useActiveSlide'
 import { useViewportHeight } from '../hooks/useViewportHeight'
 import { NavContext } from '../hooks/useSlideNav'
-import { isPresentMode, presentHref } from '../lib/presentWindow'
+import { isPresentMode, openPresentWindow } from '../lib/presentWindow'
 import { SlideView } from './layouts/SlideView'
 import styles from './Shell.module.css'
 
@@ -26,9 +26,10 @@ function isTypingTarget(target: EventTarget | null) {
 export function Shell() {
   const { containerRef, activeIndex, goTo } = useActiveSlide(slides.length)
   const activeChapter = slides[activeIndex]?.chapter
-  const [present, setPresent] = useState(() => isPresentMode())
-  const presentRef = useRef(present)
-  presentRef.current = present
+  const inPresentWindow = isPresentMode()
+  const [present, setPresent] = useState(inPresentWindow)
+  const [needClick, setNeedClick] = useState(false)
+  const presentWinRef = useRef<Window | null>(null)
 
   useViewportHeight()
 
@@ -42,40 +43,67 @@ export function Shell() {
     index: slides.findIndex((s) => s.chapter === ch.id && s.layout === 'divider'),
   }))
 
-  const setPresentMode = useCallback((on: boolean) => {
-    presentRef.current = on
-    applyPresentAttr(on)
-    window.history.replaceState(null, '', presentHref(on, activeIndexRef.current))
-    setPresent(on)
+  useEffect(() => {
+    applyPresentAttr(present)
     requestAnimationFrame(() => {
       goToRef.current(activeIndexRef.current, 'auto')
     })
+  }, [present])
+
+  const launchPresent = useCallback(() => {
+    if (isPresentMode()) {
+      if (window.opener && !window.opener.closed) window.close()
+      return true
+    }
+
+    const existing = presentWinRef.current
+    if (existing && !existing.closed) {
+      existing.close()
+      presentWinRef.current = null
+      return true
+    }
+
+    const win = openPresentWindow(activeIndexRef.current)
+    if (win) {
+      presentWinRef.current = win
+      setNeedClick(false)
+      return true
+    }
+    return false
   }, [])
 
-  useEffect(() => {
-    applyPresentAttr(present)
-  }, [present])
+  const requestPresent = useCallback(() => {
+    if (launchPresent()) return
+    setNeedClick(true)
+  }, [launchPresent])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey || e.repeat) return
       if (isTypingTarget(e.target)) return
 
-      if (e.key === 'Escape' && presentRef.current) {
-        e.preventDefault()
-        e.stopPropagation()
-        setPresentMode(false)
+      if (e.key === 'Escape') {
+        if (needClick) {
+          e.preventDefault()
+          setNeedClick(false)
+          return
+        }
+        if (isPresentMode()) {
+          e.preventDefault()
+          if (window.opener && !window.opener.closed) window.close()
+          else setPresent(false)
+        }
         return
       }
 
       if (e.code !== 'KeyP' && e.key !== 'p' && e.key !== 'P') return
       e.preventDefault()
       e.stopPropagation()
-      setPresentMode(!presentRef.current)
+      requestPresent()
     }
     window.addEventListener('keydown', onKey, true)
     return () => window.removeEventListener('keydown', onKey, true)
-  }, [setPresentMode])
+  }, [needClick, requestPresent])
 
   useEffect(() => {
     let timer = 0
@@ -144,7 +172,28 @@ export function Shell() {
         <div className={styles.counter} aria-live="polite">
           {activeIndex + 1} / {slides.length}
         </div>
+        <button
+          type="button"
+          className={styles.presentBtn}
+          onClick={() => requestPresent()}
+        >
+          Present
+        </button>
       </div>
+
+      {needClick && (
+        <button
+          type="button"
+          className={styles.presentGate}
+          onClick={() => requestPresent()}
+        >
+          <span className={styles.presentGateTitle}>Open present window</span>
+          <span className={styles.presentGateBody}>
+            Browsers block chrome-less windows from a key press. Click here, then share
+            that window in Zoom — not this tab.
+          </span>
+        </button>
+      )}
     </NavContext.Provider>
   )
 }

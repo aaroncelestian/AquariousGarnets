@@ -151,8 +151,59 @@
 }
 
 .chrome:hover .counter,
-.chrome:focus-within .counter {
+.chrome:focus-within .counter,
+.chrome:hover .presentBtn,
+.chrome:focus-within .presentBtn {
   opacity: 1;
+}
+
+.presentBtn {
+  font-family: var(--font-heading);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-text) 70%, transparent);
+  background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+  border: 1px solid var(--color-divider);
+  padding: 6px 10px;
+  cursor: pointer;
+  opacity: 0.5;
+}
+
+.presentBtn:hover,
+.presentBtn:focus-visible {
+  opacity: 1;
+  color: var(--color-text);
+}
+
+.presentGate {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border: 0;
+  cursor: pointer;
+  background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+  color: var(--color-text);
+  padding: 32px;
+}
+
+.presentGateTitle {
+  font-family: var(--font-heading);
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 800;
+}
+
+.presentGateBody {
+  max-width: 36ch;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--color-text) 70%, transparent);
 }
 
 @media (max-width: 700px) {
