@@ -160,69 +160,71 @@ export function RamanZoom({ active }: { active: boolean }) {
             transition: reduced ? 'none' : view.transition,
           }}
         >
-          <img
-            src={asset('images/raman-comparison.png')}
-            alt="Raman spectra comparing uncoated garnet and organic-rich coating"
-            className={styles.ramanZoomImg}
-            draggable={false}
-          />
-          <svg
-            className={styles.ramanZoomOverlay}
-            viewBox="0 0 1000 1000"
-            preserveAspectRatio="none"
-            aria-hidden
-          >
-            <path
-              d={GARNET_PATH}
-              className={styles.ramanTraceMono}
-              data-draw={view.showGarnet || undefined}
-              pathLength={1}
+          <div className={styles.ramanZoomFrame}>
+            <img
+              src={asset('images/raman-comparison.png')}
+              alt="Raman spectra comparing uncoated garnet and organic-rich coating"
+              className={styles.ramanZoomImg}
+              draggable={false}
             />
-            <path
-              d={HEMATITE_PATH}
-              className={styles.ramanTraceMono}
-              data-draw={view.showHematite || undefined}
-              pathLength={1}
-            />
-            <path
-              d={FE_HITCH_PATH}
-              className={styles.ramanTraceMono}
-              data-draw={view.showFe || undefined}
-              pathLength={1}
-            />
-            <path
-              d={ORGANIC_PATH}
-              className={styles.ramanTraceMono}
-              data-draw={view.showOrganic || undefined}
-              pathLength={1}
-            />
-          </svg>
-          {view.showGarnet && (
-            <span
-              className={`${styles.ramanTraceTag} ${styles.ramanTraceTagBare} ${styles.ramanTraceTagBelow}`}
-              style={{ left: '32%', top: '84%' }}
+            <svg
+              className={styles.ramanZoomOverlay}
+              viewBox="0 0 1000 1000"
+              preserveAspectRatio="none"
+              aria-hidden
             >
-              Garnet
-            </span>
-          )}
-          {view.showHematite && (
-            <span
-              className={`${styles.ramanTraceTag} ${styles.ramanTraceTagBare}`}
-              style={{ left: '20%', top: '48%' }}
-            >
-              Hematite
-            </span>
-          )}
-          {view.showFe && (
-            <span className={styles.ramanTraceTag} style={{ left: '71.5%', top: '28%' }}>
-              Fe · ~1320
-            </span>
-          )}
-          {view.showOrganic && (
-            <span className={styles.ramanTraceTag} style={{ left: '86%', top: '20%' }}>
-              Organic C
-            </span>
-          )}
+              <path
+                d={GARNET_PATH}
+                className={styles.ramanTraceMono}
+                data-draw={view.showGarnet || undefined}
+                pathLength={1}
+              />
+              <path
+                d={HEMATITE_PATH}
+                className={styles.ramanTraceMono}
+                data-draw={view.showHematite || undefined}
+                pathLength={1}
+              />
+              <path
+                d={FE_HITCH_PATH}
+                className={styles.ramanTraceMono}
+                data-draw={view.showFe || undefined}
+                pathLength={1}
+              />
+              <path
+                d={ORGANIC_PATH}
+                className={styles.ramanTraceMono}
+                data-draw={view.showOrganic || undefined}
+                pathLength={1}
+              />
+            </svg>
+            {view.showGarnet && (
+              <span
+                className={`${styles.ramanTraceTag} ${styles.ramanTraceTagBare} ${styles.ramanTraceTagBelow}`}
+                style={{ left: '32%', top: '84%' }}
+              >
+                Garnet
+              </span>
+            )}
+            {view.showHematite && (
+              <span
+                className={`${styles.ramanTraceTag} ${styles.ramanTraceTagBare}`}
+                style={{ left: '20%', top: '48%' }}
+              >
+                Hematite
+              </span>
+            )}
+            {view.showFe && (
+              <span className={styles.ramanTraceTag} style={{ left: '71.5%', top: '28%' }}>
+                Fe · ~1320
+              </span>
+            )}
+            {view.showOrganic && (
+              <span className={styles.ramanTraceTag} style={{ left: '86%', top: '20%' }}>
+                Organic C
+              </span>
+            )}
+          </div>
         </div>
         <div className={styles.ramanZoomChrome}>
           <span className={styles.ramanZoomStep} aria-hidden>
