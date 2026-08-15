@@ -9,12 +9,12 @@ export function exitPresentHref() {
   return url.toString()
 }
 
+type ScreenBox = Screen & { availLeft?: number; availTop?: number }
+
 export function fillScreen(win: Window) {
-  const s = window.screen
-  const left = s.availLeft ?? 0
-  const top = s.availTop ?? 0
+  const s = window.screen as ScreenBox
   try {
-    win.moveTo(left, top)
+    win.moveTo(s.availLeft ?? 0, s.availTop ?? 0)
     win.resizeTo(s.availWidth, s.availHeight)
   } catch {
     // Tabs ignore move/resize; popups may still accept it.
