@@ -24,7 +24,7 @@ export function useActiveSlide(count: number) {
       setIndex(clamped)
 
       // Position from the scroll container so snap + keyboard stay in sync.
-      // After layout thrash (e.g. fullscreen), offsetTop must be read after paint.
+      // After layout thrash (e.g. present window resize), offsetTop must be read after paint.
       const scroll = () => {
         root.scrollTo({ top: el.offsetTop, behavior })
       }
@@ -42,6 +42,25 @@ export function useActiveSlide(count: number) {
     },
     [count, setIndex],
   )
+
+  useEffect(() => {
+    const slide = Number(new URLSearchParams(window.location.search).get('slide'))
+    if (!Number.isFinite(slide) || slide < 1) return
+
+    let cancelled = false
+    const tryJump = (attempt = 0) => {
+      if (cancelled) return
+      if (containerRef.current) {
+        goTo(slide - 1, 'auto')
+        return
+      }
+      if (attempt < 20) requestAnimationFrame(() => tryJump(attempt + 1))
+    }
+    tryJump()
+    return () => {
+      cancelled = true
+    }
+  }, [goTo])
 
   useEffect(() => {
     const root = containerRef.current

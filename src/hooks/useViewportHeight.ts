@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-/** Keep --app-height in sync with the real visible viewport (incl. fullscreen). */
+/** Keep --app-height in sync with the real visible viewport. */
 export function useViewportHeight() {
   useEffect(() => {
     const root = document.documentElement
@@ -15,15 +15,11 @@ export function useViewportHeight() {
     window.addEventListener('resize', sync)
     window.visualViewport?.addEventListener('resize', sync)
     window.visualViewport?.addEventListener('scroll', sync)
-    document.addEventListener('fullscreenchange', sync)
-    document.addEventListener('webkitfullscreenchange', sync)
 
     return () => {
       window.removeEventListener('resize', sync)
       window.visualViewport?.removeEventListener('resize', sync)
       window.visualViewport?.removeEventListener('scroll', sync)
-      document.removeEventListener('fullscreenchange', sync)
-      document.removeEventListener('webkitfullscreenchange', sync)
     }
   }, [])
 }

@@ -3,36 +3,25 @@ import { slides, CHAPTERS } from '../data/slides'
 import { useActiveSlide } from '../hooks/useActiveSlide'
 import { useViewportHeight } from '../hooks/useViewportHeight'
 import { NavContext } from '../hooks/useSlideNav'
+import {
+  exitPresentHref,
+  fillScreen,
+  isPresentMode,
+  openPresentWindow,
+} from '../lib/presentWindow'
 import { SlideView } from './layouts/SlideView'
 import styles from './Shell.module.css'
 
-function getFullscreenElement() {
-  const doc = document as Document & {
-    webkitFullscreenElement?: Element | null
-  }
-  return document.fullscreenElement ?? doc.webkitFullscreenElement ?? null
-}
-
-async function enterFullscreen(el: HTMLElement) {
-  const node = el as HTMLElement & {
-    webkitRequestFullscreen?: () => Promise<void> | void
-  }
-  if (node.requestFullscreen) await node.requestFullscreen()
-  else if (node.webkitRequestFullscreen) await node.webkitRequestFullscreen()
-}
-
-async function exitFullscreen() {
-  const doc = document as Document & {
-    webkitExitFullscreen?: () => Promise<void> | void
-  }
-  if (document.exitFullscreen) await document.exitFullscreen()
-  else if (doc.webkitExitFullscreen) await doc.webkitExitFullscreen()
+function applyPresentAttr(active: boolean) {
+  document.documentElement.toggleAttribute('data-present', active)
+  document.documentElement.toggleAttribute('data-fullscreen', active)
 }
 
 export function Shell() {
   const { containerRef, activeIndex, goTo } = useActiveSlide(slides.length)
   const activeChapter = slides[activeIndex]?.chapter
-  const [fullscreen, setFullscreen] = useState(false)
+  const [present, setPresent] = useState(() => isPresentMode())
+  const presentWinRef = useRef<Window | null>(null)
 
   useViewportHeight()
 
@@ -47,43 +36,59 @@ export function Shell() {
   }))
 
   useEffect(() => {
-    const sync = () => {
-      const active = Boolean(getFullscreenElement())
-      setFullscreen(active)
-      document.documentElement.toggleAttribute('data-fullscreen', active)
-      // Force layout + WebGL canvases to remeasure the new viewport.
-      window.dispatchEvent(new Event('resize'))
-      // Re-snap after slide heights recompute for the new canvas.
-      requestAnimationFrame(() => {
-        goToRef.current(activeIndexRef.current, 'auto')
-      })
-    }
-    setFullscreen(Boolean(getFullscreenElement()))
-    document.addEventListener('fullscreenchange', sync)
-    document.addEventListener('webkitfullscreenchange', sync)
+    applyPresentAttr(present)
+    window.dispatchEvent(new Event('resize'))
+    requestAnimationFrame(() => {
+      goToRef.current(activeIndexRef.current, 'auto')
+    })
     return () => {
-      document.removeEventListener('fullscreenchange', sync)
-      document.removeEventListener('webkitfullscreenchange', sync)
-      document.documentElement.removeAttribute('data-fullscreen')
+      if (!isPresentMode()) applyPresentAttr(false)
     }
+  }, [present])
+
+  const enterInPlacePresent = useCallback(() => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('present', '1')
+    url.searchParams.set('slide', String(activeIndexRef.current + 1))
+    window.history.replaceState(null, '', url.toString())
+    fillScreen(window)
+    setPresent(true)
   }, [])
 
-  const toggleFullscreen = useCallback(async () => {
-    try {
-      if (getFullscreenElement()) {
-        await exitFullscreen()
+  const exitInPlacePresent = useCallback(() => {
+    window.history.replaceState(null, '', exitPresentHref())
+    setPresent(false)
+  }, [])
+
+  const togglePresent = useCallback(() => {
+    if (isPresentMode()) {
+      if (window.opener && !window.opener.closed) {
+        window.close()
         return
       }
-      // Fullscreen the document so fixed chrome (TOC / progress) stays available.
-      await enterFullscreen(document.documentElement)
-    } catch {
-      // User gesture / browser policy can reject — leave UI unchanged.
+      exitInPlacePresent()
+      return
     }
-  }, [])
+
+    const existing = presentWinRef.current
+    if (existing && !existing.closed) {
+      existing.close()
+      presentWinRef.current = null
+      return
+    }
+
+    const win = openPresentWindow(activeIndexRef.current)
+    if (win) {
+      presentWinRef.current = win
+      return
+    }
+
+    // Popup blocked — stay in this window so Zoom's share surface does not change.
+    enterInPlacePresent()
+  }, [enterInPlacePresent, exitInPlacePresent])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'f' && e.key !== 'F') return
       if (e.metaKey || e.ctrlKey || e.altKey) return
       const tag = (e.target as HTMLElement)?.tagName
       const editable =
@@ -92,12 +97,27 @@ export function Shell() {
         tag === 'SELECT' ||
         (e.target as HTMLElement)?.isContentEditable
       if (editable) return
+
+      if (e.key === 'Escape' && (isPresentMode() || present)) {
+        e.preventDefault()
+        togglePresent()
+        return
+      }
+
+      if (e.key !== 'p' && e.key !== 'P') return
       e.preventDefault()
-      void toggleFullscreen()
+      togglePresent()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [toggleFullscreen])
+  }, [present, togglePresent])
+
+  useEffect(() => {
+    return () => {
+      const win = presentWinRef.current
+      if (win && !win.closed) win.close()
+    }
+  }, [])
 
   // Keep the active slide filling the canvas if the window is resized
   // while already presenting (monitor changes, browser UI, etc.).
@@ -136,49 +156,55 @@ export function Shell() {
         ))}
       </div>
 
-      <nav className={styles.nav} aria-label="Slide progress">
-        {slides.map((s, i) => (
-          <button
-            key={s.id}
-            type="button"
-            className={styles.dot}
-            data-active={i === activeIndex}
-            aria-label={`Go to ${s.label}`}
-            aria-current={i === activeIndex ? 'true' : undefined}
-            onClick={() => goTo(i)}
-          />
-        ))}
-      </nav>
+      {!present && (
+        <>
+          <nav className={styles.nav} aria-label="Slide progress">
+            {slides.map((s, i) => (
+              <button
+                key={s.id}
+                type="button"
+                className={styles.dot}
+                data-active={i === activeIndex}
+                aria-label={`Go to ${s.label}`}
+                aria-current={i === activeIndex ? 'true' : undefined}
+                onClick={() => goTo(i)}
+              />
+            ))}
+          </nav>
 
-      <nav className={styles.toc} aria-label="Chapters">
-        {chapterStarts.map((ch) => (
+          <nav className={styles.toc} aria-label="Chapters">
+            {chapterStarts.map((ch) => (
+              <button
+                key={ch.id}
+                type="button"
+                className={styles.tocBtn}
+                data-active={activeChapter === ch.id}
+                onClick={() => goTo(Math.max(0, ch.index))}
+              >
+                {ch.num} {ch.title}
+              </button>
+            ))}
+          </nav>
+        </>
+      )}
+
+      {!present && (
+        <div className={styles.chrome}>
+          <div className={styles.counter} aria-live="polite">
+            {activeIndex + 1} / {slides.length}
+          </div>
           <button
-            key={ch.id}
             type="button"
-            className={styles.tocBtn}
-            data-active={activeChapter === ch.id}
-            onClick={() => goTo(Math.max(0, ch.index))}
+            className={styles.fullscreenBtn}
+            onClick={() => togglePresent()}
+            aria-pressed={false}
+            aria-label="Present"
+            title="Present in a chrome-less window (P) — share that window in Zoom"
           >
-            {ch.num} {ch.title}
+            Present
           </button>
-        ))}
-      </nav>
-
-      <div className={styles.chrome}>
-        <div className={styles.counter} aria-live="polite">
-          {activeIndex + 1} / {slides.length}
         </div>
-        <button
-          type="button"
-          className={styles.fullscreenBtn}
-          onClick={() => void toggleFullscreen()}
-          aria-pressed={fullscreen}
-          aria-label={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-          title={fullscreen ? 'Exit fullscreen (F)' : 'Fullscreen (F)'}
-        >
-          {fullscreen ? 'Exit full screen' : 'Full screen'}
-        </button>
-      </div>
+      )}
     </NavContext.Provider>
   )
 }

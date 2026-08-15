@@ -210,10 +210,12 @@
   margin-bottom: 4px;
 }
 
+:global(html[data-present]) .mapFrame,
 :global(html[data-fullscreen]) .mapFrame {
   max-height: calc(var(--app-height, 100dvh) * 0.48);
 }
 
+:global(html[data-present]) .elevChart,
 :global(html[data-fullscreen]) .elevChart {
   max-height: min(280px, calc(var(--app-height, 100dvh) * 0.3));
 }
