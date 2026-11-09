@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { slides, CHAPTERS } from '../data/slides'
 import { useActiveSlide } from '../hooks/useActiveSlide'
 import { useViewportHeight } from '../hooks/useViewportHeight'
@@ -29,6 +30,7 @@ export function Shell() {
   const inPresentWindow = isPresentMode()
   const [present, setPresent] = useState(inPresentWindow)
   const [needClick, setNeedClick] = useState(false)
+  const [printing, setPrinting] = useState(false)
   const presentWinRef = useRef<Window | null>(null)
 
   useViewportHeight()
@@ -122,6 +124,36 @@ export function Shell() {
     }
   }, [])
 
+  useEffect(() => {
+    const onBefore = () => {
+      flushSync(() => setPrinting(true))
+      document.documentElement.setAttribute('data-print', '')
+    }
+    const onAfter = () => {
+      document.documentElement.removeAttribute('data-print')
+      setPrinting(false)
+      requestAnimationFrame(() => {
+        goToRef.current(activeIndexRef.current, 'auto')
+      })
+    }
+    window.addEventListener('beforeprint', onBefore)
+    window.addEventListener('afterprint', onAfter)
+    return () => {
+      window.removeEventListener('beforeprint', onBefore)
+      window.removeEventListener('afterprint', onAfter)
+      document.documentElement.removeAttribute('data-print')
+    }
+  }, [])
+
+  const printPdf = useCallback(() => {
+    flushSync(() => setPrinting(true))
+    document.documentElement.setAttribute('data-print', '')
+    // Let layout settle with every slide active before the dialog opens.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => window.print())
+    })
+  }, [])
+
   return (
     <NavContext.Provider value={goTo}>
       <div ref={containerRef} className={styles.shell} id="deck">
@@ -134,13 +166,18 @@ export function Shell() {
             aria-label={slide.label}
           >
             <div className={styles.slideInner}>
-              <SlideView slide={slide} active={i === activeIndex} />
+              <SlideView slide={slide} active={printing || i === activeIndex} />
             </div>
           </section>
         ))}
       </div>
 
-      <nav className={styles.nav} aria-label="Slide progress" hidden={present}>
+      <nav
+        className={styles.nav}
+        aria-label="Slide progress"
+        hidden={present}
+        data-print-hide=""
+      >
         {slides.map((s, i) => (
           <button
             key={s.id}
@@ -154,7 +191,12 @@ export function Shell() {
         ))}
       </nav>
 
-      <nav className={styles.toc} aria-label="Chapters" hidden={present}>
+      <nav
+        className={styles.toc}
+        aria-label="Chapters"
+        hidden={present}
+        data-print-hide=""
+      >
         {chapterStarts.map((ch) => (
           <button
             key={ch.id}
@@ -168,7 +210,7 @@ export function Shell() {
         ))}
       </nav>
 
-      <div className={styles.chrome} hidden={present}>
+      <div className={styles.chrome} hidden={present} data-print-hide="">
         <div className={styles.counter} aria-live="polite">
           {activeIndex + 1} / {slides.length}
         </div>
@@ -179,12 +221,21 @@ export function Shell() {
         >
           Present
         </button>
+        <button
+          type="button"
+          className={styles.presentBtn}
+          onClick={() => printPdf()}
+          title="Print or save slides as PDF"
+        >
+          PDF
+        </button>
       </div>
 
       {needClick && (
         <button
           type="button"
           className={styles.presentGate}
+          data-print-hide=""
           onClick={() => requestPresent()}
         >
           <span className={styles.presentGateTitle}>Open present window</span>

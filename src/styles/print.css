@@ -1,0 +1,84 @@
+/* Landscape 16:9 pages — one slide per sheet. */
+@page {
+  size: 13.333in 7.5in;
+  margin: 0;
+}
+
+@media print {
+  html,
+  body,
+  #root {
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: var(--color-bg) !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  html {
+    --app-height: 7.5in;
+    --pad-x: 0.55in;
+    --pad-y: 0.4in;
+  }
+
+  /* Kill scroll-snap deck behavior so every slide lays out as a page. */
+  #deck {
+    height: auto !important;
+    overflow: visible !important;
+    scroll-snap-type: none !important;
+  }
+
+  #deck > section[data-slide-index] {
+    break-after: page;
+    page-break-after: always;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    height: 7.5in !important;
+    min-height: 7.5in !important;
+    max-height: 7.5in !important;
+    width: 13.333in !important;
+    overflow: hidden !important;
+  }
+
+  #deck > section[data-slide-index]:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  #deck > section[data-slide-index] > div {
+    max-width: none !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Deck chrome + in-slide controls — never print. */
+  [data-print-hide] {
+    display: none !important;
+  }
+
+  /* Framer Motion leaves inactive slides at opacity 0 — force content visible. */
+  #deck > section[data-slide-index] * {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  #deck > section[data-slide-index] [style*='opacity'],
+  #deck > section[data-slide-index] [style*='transform'] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  img,
+  canvas,
+  svg {
+    break-inside: avoid;
+    max-width: 100%;
+  }
+
+  a[href]::after {
+    content: none !important;
+  }
+}
