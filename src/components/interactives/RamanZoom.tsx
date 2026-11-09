@@ -149,6 +149,7 @@ export function RamanZoom({ active }: { active: boolean }) {
         <button
           type="button"
           className={styles.ramanZoomHit}
+          data-print-hide=""
           onClick={next}
           aria-label={view.cta}
         />
@@ -226,7 +227,7 @@ export function RamanZoom({ active }: { active: boolean }) {
             )}
           </div>
         </div>
-        <div className={styles.ramanZoomChrome}>
+        <div className={styles.ramanZoomChrome} data-print-hide="">
           <span className={styles.ramanZoomStep} aria-hidden>
             {view.label} · {step + 1}/{STEPS.length}
           </span>
